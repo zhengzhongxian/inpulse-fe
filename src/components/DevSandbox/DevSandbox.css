@@ -1,0 +1,98 @@
+/* Developer Sandbox Bubble */
+.dev-sandbox-bubble {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 52px;
+  height: 52px;
+  background: #1C1C1C;
+  border-radius: 50%;
+  z-index: 500;
+  box-shadow: var(--shadow-lg);
+  transition: var(--transition);
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.dev-sandbox-bubble.expanded {
+  width: 320px;
+  height: auto;
+  max-height: 460px;
+  border-radius: 12px;
+  overflow-y: auto;
+}
+
+.dev-sandbox-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  cursor: pointer;
+  background: #1C1C1C;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+.dev-sandbox-header span {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.8);
+  white-space: nowrap;
+}
+
+.dev-sandbox-toggle-btn {
+  color: rgba(255,255,255,0.4);
+  font-size: 11px;
+  flex-shrink: 0;
+  margin-left: 8px;
+}
+
+.dev-sandbox-body {
+  padding: 14px 16px;
+  font-size: 12px;
+  color: rgba(255,255,255,0.55);
+  border-top: 1px solid rgba(255,255,255,0.07);
+}
+
+.dev-sandbox-stat {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 5px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  gap: 8px;
+}
+
+.dev-sandbox-stat:last-child { border-bottom: none; }
+
+.stat-label {
+  color: rgba(255,255,255,0.38);
+  font-size: 11px;
+  flex-shrink: 0;
+}
+
+.stat-val {
+  font-family: ui-monospace, monospace;
+  font-size: 10.5px;
+  color: var(--primary);
+  text-align: right;
+  word-break: break-all;
+}
+
+/* Responsive fixes for sandbox */
+@media (max-width: 768px) {
+  .hero-title {
+    font-size: 32px;
+  }
+
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 20px;
+  }
+
+  .nav-menu {
+    display: none;
+  }
+}

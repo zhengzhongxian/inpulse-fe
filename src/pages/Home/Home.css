@@ -1,0 +1,157 @@
+/* Hero Features Block Layout */
+.home-hero-features {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  max-width: 1200px;
+  margin: 32px auto;
+  padding: 0 24px;
+}
+
+.hero-feature-card {
+  background-color: #EFEFEF;
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  text-align: left;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+  transition: var(--transition);
+}
+
+.hero-feature-card:hover {
+  background-color: #ECECEC;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+}
+
+.feature-icon-circle {
+  width: 46px;
+  height: 46px;
+  background-color: var(--primary);
+  color: #FFFFFF;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.white-icon {
+  color: #FFFFFF;
+}
+
+.feature-content {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0; /* allows shrinking without overflow */
+}
+
+.feature-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 4px;
+}
+
+.feature-desc {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.4;
+  margin-bottom: 16px;
+}
+
+.feature-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: auto;
+  gap: 8px;
+}
+
+.feature-meta {
+  font-size: 11px;
+  color: var(--text-light);
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.btn-feature-action {
+  background-color: var(--primary);
+  color: #FFFFFF;
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 6px 12px;
+  border-radius: 6px;
+  text-decoration: none;
+  border: none;
+  transition: var(--transition);
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.btn-feature-action:hover {
+  background-color: var(--primary-hover);
+}
+
+@media (max-width: 1100px) {
+  .home-hero-features {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 650px) {
+  .home-hero-features {
+    grid-template-columns: 1fr;
+    margin: 20px auto;
+  }
+}
+
+/* Bookstore Grid Section */
+.section-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 60px 24px;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 40px;
+}
+
+.section-title {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.filter-tabs {
+  display: flex;
+  gap: 12px;
+}
+
+.filter-tab {
+  background-color: var(--bg-main);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  padding: 8px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 30px;
+}
+
+.filter-tab.active {
+  background-color: var(--primary);
+  border-color: var(--primary);
+  color: #FFFFFF;
+}
+
+.filter-tab:hover:not(.active) {
+  border-color: var(--border-dark);
+  color: var(--text-main);
+}

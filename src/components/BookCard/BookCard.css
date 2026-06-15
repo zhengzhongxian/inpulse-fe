@@ -1,0 +1,132 @@
+/* Book Card Grid */
+.book-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 32px;
+  text-align: left;
+}
+
+.book-card {
+  background-color: var(--bg-main);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition);
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+}
+
+.book-card:hover {
+  box-shadow: var(--shadow-md);
+  border-color: #DCDCDC;
+}
+
+.book-cover-wrap {
+  height: 320px;
+  background-color: #FAFAFA;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.book-cover {
+  height: 100%;
+  object-fit: contain;
+  border-radius: 4px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+  transition: var(--transition);
+}
+
+.book-card:hover .book-cover {
+  transform: scale(1.02);
+}
+
+.book-badge {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  background-color: #333333;
+  color: #FFFFFF;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 4px;
+  z-index: 1;
+}
+
+.book-badge.sale {
+  background-color: var(--primary);
+}
+
+.book-info {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+.book-author {
+  font-size: 12px;
+  color: var(--text-light);
+  font-weight: 600;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.book-title {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 12px;
+  line-height: 1.4;
+  color: var(--text-main);
+}
+
+.book-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: auto;
+}
+
+.book-price {
+  display: flex;
+  flex-direction: column;
+}
+
+.price-now {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--primary);
+}
+
+.price-was {
+  font-size: 13px;
+  color: var(--text-light);
+  text-decoration: line-through;
+}
+
+.btn-buy {
+  width: 40px;
+  height: 40px;
+  background-color: var(--bg-secondary);
+  color: var(--text-muted);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  border: 1px solid var(--border);
+  transition: var(--transition);
+}
+
+.book-card:hover .btn-buy {
+  background-color: var(--primary);
+  color: #FFFFFF;
+  border-color: var(--primary);
+}
