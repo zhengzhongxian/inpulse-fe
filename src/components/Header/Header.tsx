@@ -6,8 +6,9 @@ interface HeaderProps {
   user: UserSession | null;
   userDropdownActive: boolean;
   setUserDropdownActive: (active: boolean) => void;
-  onNavigate: (page: 'home' | 'login') => void;
+  onNavigate: (page: 'home' | 'login' | 'profile' | 'book-detail') => void;
   logoutUser: () => void;
+  coins: number;
 }
 
 function Header({
@@ -17,6 +18,7 @@ function Header({
   setUserDropdownActive,
   onNavigate,
   logoutUser,
+  coins,
 }: HeaderProps) {
   return (
     <header>
@@ -63,7 +65,7 @@ function Header({
                   <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                   <circle cx="12" cy="7" r="4"></circle>
                 </svg>
-                <span className="badge-count coin-badge">0 xu</span>
+                <span className="badge-count coin-badge">{coins} xu</span>
               </button>
             ) : (
               <div className="user-widget">
@@ -75,7 +77,7 @@ function Header({
                     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                     <circle cx="12" cy="7" r="4"></circle>
                   </svg>
-                  <span className="badge-count coin-badge">100 xu</span>
+                  <span className="badge-count coin-badge">{coins} xu</span>
                 </button>
                 {userDropdownActive && (
                   <div className="user-dropdown">
@@ -84,7 +86,11 @@ function Header({
                       <div className="dropdown-user-email">{user?.email}</div>
                     </div>
                     <div className="dropdown-divider" />
-                    <div className="dropdown-item">Số dư: 100 xu</div>
+                    <div className="dropdown-item" onClick={() => { onNavigate('profile'); setUserDropdownActive(false); }}>
+                      👤 Trang cá nhân & Cài đặt
+                    </div>
+                    <div className="dropdown-divider" />
+                    <div className="dropdown-item">Số dư: {coins} xu</div>
                     <div className="dropdown-divider" />
                     <div className="dropdown-item danger" onClick={logoutUser}>
                       Đăng xuất

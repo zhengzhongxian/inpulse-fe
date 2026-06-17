@@ -10,4 +10,5 @@ export interface Book {
   tagClass?: string;
   desc: string;
   svgCover: React.ReactNode;
+  attributes?: Record<string, string>;
 }

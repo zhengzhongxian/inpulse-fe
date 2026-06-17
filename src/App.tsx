@@ -8,6 +8,8 @@ import BookModal from './components/BookModal/BookModal';
 import DevSandbox from './components/DevSandbox/DevSandbox';
 import Home from './pages/Home/Home';
 import Login from './pages/Login/Login';
+import Profile from './pages/Profile/Profile';
+import BookDetail from './pages/BookDetail/BookDetail';
 import {
   loginApi,
   sendOtpApi,
@@ -20,11 +22,13 @@ import {
 
 function App() {
   // Navigation & View States
-  const [currentPage, setCurrentPage] = useState<'home' | 'login'>('home');
+  const [currentPage, setCurrentPage] = useState<'home' | 'login' | 'profile' | 'book-detail'>('home');
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const [user, setUser] = useState<UserSession | null>(null);
   const [selectedBook, setSelectedBook] = useState<Book | null>(null);
+  const [selectedDetailBook, setSelectedDetailBook] = useState<Book | null>(null);
   const [userDropdownActive, setUserDropdownActive] = useState<boolean>(false);
+  const [userCoins, setUserCoins] = useState<number>(100);
 
   // Login Form & Flow States
   const [loginError, setLoginError] = useState<string | null>(null);
@@ -318,12 +322,20 @@ function App() {
   };
 
   // Navigation page wrapper
-  const handlePageNavigation = (page: 'home' | 'login') => {
+  const handlePageNavigation = (page: 'home' | 'login' | 'profile' | 'book-detail') => {
     setCurrentPage(page);
     if (page === 'login') {
       setLoginStage('form');
       setLoginError(null);
     }
+  };
+
+  const handleUpdateUserCoins = (cost: number) => {
+    setUserCoins((prev) => Math.max(0, prev - cost));
+  };
+
+  const handleUpdateUserProfile = (updated: Partial<UserSession>) => {
+    setUser((prev) => prev ? { ...prev, ...updated } : null);
   };
 
   // Books lists
@@ -350,7 +362,15 @@ function App() {
           <line x1="100" y1="155" x2="100" y2="205" stroke="#F66398" stroke-width="2"/>
           <text x="35" y="235" font-family="sans-serif" font-size="9" font-weight="600" fill="#999999">ROBERT C. MARTIN</text>
         </svg>
-      )
+      ),
+      attributes: {
+        'Ngôn ngữ': 'Tiếng Anh (Bản dịch tiếng Việt)',
+        'Nhà xuất bản': 'Addison-Wesley',
+        'Hình thức': 'Bìa Cứng',
+        'Số trang': '432 trang',
+        'Năm xuất bản': '2024',
+        'Kích thước': '16 x 24 cm'
+      }
     },
     {
       id: 'cqrs',
@@ -370,7 +390,15 @@ function App() {
           <path d="M 50 150 L 140 150 L 95 195 Z" fill="none" stroke="#F66398" stroke-width="2"/>
           <text x="35" y="235" font-family="sans-serif" font-size="9" font-weight="600" fill="#999999">VAUGHN VERNON</text>
         </svg>
-      )
+      ),
+      attributes: {
+        'Ngôn ngữ': 'Tiếng Việt',
+        'Nhà xuất bản': 'O\'Reilly Media',
+        'Hình thức': 'Bìa Cứng',
+        'Số trang': '512 trang',
+        'Năm xuất bản': '2023',
+        'Kích thước': '16 x 24 cm'
+      }
     },
     {
       id: 'redis',
@@ -393,7 +421,15 @@ function App() {
           <circle cx="90" cy="160" r="10" fill="#F66398"/>
           <text x="35" y="235" font-family="sans-serif" font-size="9" font-weight="600" fill="#999999">SALVATORE SANFILIPPO</text>
         </svg>
-      )
+      ),
+      attributes: {
+        'Ngôn ngữ': 'Tiếng Việt',
+        'Nhà xuất bản': 'Packt Publishing',
+        'Hình thức': 'Bìa Mềm',
+        'Số trang': '380 trang',
+        'Năm xuất bản': '2024',
+        'Kích thước': '15 x 23 cm'
+      }
     },
     {
       id: 'microservices',
@@ -419,29 +455,60 @@ function App() {
           </g>
           <text x="35" y="235" font-family="sans-serif" font-size="9" font-weight="600" fill="#999999">SAM NEWMAN</text>
         </svg>
-      )
+      ),
+      attributes: {
+        'Ngôn ngữ': 'Tiếng Việt',
+        'Nhà xuất bản': 'O\'Reilly Media',
+        'Hình thức': 'Bìa Cứng',
+        'Số trang': '460 trang',
+        'Năm xuất bản': '2022',
+        'Kích thước': '16 x 24 cm'
+      }
     }
   ];
 
   return (
     <>
-      <Header
-        isLoggedIn={isLoggedIn}
-        user={user}
-        userDropdownActive={userDropdownActive}
-        setUserDropdownActive={setUserDropdownActive}
-        onNavigate={handlePageNavigation}
-        logoutUser={logoutUser}
-      />
+      {currentPage !== 'login' && (
+        <Header
+          isLoggedIn={isLoggedIn}
+          user={user}
+          userDropdownActive={userDropdownActive}
+          setUserDropdownActive={setUserDropdownActive}
+          onNavigate={handlePageNavigation}
+          logoutUser={logoutUser}
+          coins={userCoins}
+        />
+      )}
 
       {/* Main Content Router */}
       <main style={{ flexGrow: 1 }}>
-        {currentPage === 'home' ? (
+        {currentPage === 'home' && (
           <Home
             books={books}
-            onSelectBook={setSelectedBook}
+            onSelectBook={(book) => {
+              setSelectedDetailBook(book);
+              setCurrentPage('book-detail');
+            }}
           />
-        ) : (
+        )}
+        {currentPage === 'book-detail' && selectedDetailBook && (
+          <BookDetail
+            book={selectedDetailBook}
+            user={user}
+            coins={userCoins}
+            onBack={() => setCurrentPage('home')}
+            onUpdateUserCoins={handleUpdateUserCoins}
+            onAddToCart={(book) => toast.success(`Đã thêm "${book.title}" vào giỏ hàng!`)}
+          />
+        )}
+        {currentPage === 'profile' && (
+          <Profile
+            user={user}
+            onUpdateUser={handleUpdateUserProfile}
+          />
+        )}
+        {currentPage === 'login' && (
           <Login
             loginLoading={loginLoading}
             loginStage={loginStage}
@@ -454,6 +521,7 @@ function App() {
             onOtpVerify={handleOtpVerify}
             onTotpVerify={handleTotpVerify}
             onBackToMfaSelect={() => setLoginStage('mfa_select')}
+            onBackToHome={() => setCurrentPage('home')}
           />
         )}
       </main>
