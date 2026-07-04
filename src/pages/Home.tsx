@@ -1,13 +1,108 @@
-import type { Book } from '../../types';
-import BookCard from '../../components/BookCard/BookCard';
+import { useState, useEffect } from 'react';
+import BookCard from '../features/Book/BookCard/BookCard';
+import { getBooksApi } from '../api/books';
+import { getCategoriesApi } from '../api/categories';
+import { mapResponseToBook } from '../utils/bookHelper';
+import type { Book } from '../models/Book';
+import type { BookResponse } from '../api/books';
+import { useSeo } from '../hooks/useSeo';
 import './Home.css';
 
-interface HomeProps {
-  books: Book[];
-  onSelectBook: (book: Book) => void;
-}
+function Home() {
+  useSeo(
+    'InkPulse Bookstore - Nhà sách lập trình & kiến trúc hệ thống trực tuyến',
+    'Mua sách lập trình cao cấp, thiết kế kiến trúc hệ thống, CQRS, Event Sourcing, Redis Stack, Microservices thực chiến bản đẹp bìa cứng tại InkPulse.'
+  );
 
-function Home({ books, onSelectBook }: HomeProps) {
+  const [books, setBooks] = useState<Book[]>([]);
+  const [pageNumber, setPageNumber] = useState<number>(1);
+  const [hasMore, setHasMore] = useState<boolean>(false);
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [isPageLoading, setIsPageLoading] = useState<boolean>(false);
+
+  const [categories, setCategories] = useState<{ name: string; slug: string }[]>([
+    { name: 'Tất cả', slug: 'all' }
+  ]);
+  const [hasMoreCategories, setHasMoreCategories] = useState<boolean>(false);
+
+  const loadBooks = async (page: number, category: string, append: boolean) => {
+    setIsPageLoading(true);
+    try {
+      const activeFilters = {
+        pageNumber: page,
+        pageSize: 4,
+        categorySlug: category,
+      };
+
+      // Clean empty params
+      Object.keys(activeFilters).forEach(key => {
+        if ((activeFilters as any)[key] === '' || (activeFilters as any)[key] === undefined) {
+          delete (activeFilters as any)[key];
+        }
+      });
+
+      const response = await getBooksApi(activeFilters);
+      
+      const data = response.data;
+      if (data && data.success && data.data) {
+        const pagedList = data.data;
+        const mappedBooks = pagedList.items.map((item: BookResponse) => mapResponseToBook(item));
+        
+        if (append) {
+          setBooks(prev => {
+            // Avoid duplicate ids if any
+            const existingIds = new Set(prev.map(b => b.id));
+            const uniqueNew = mappedBooks.filter((b: Book) => !existingIds.has(b.id));
+            return [...prev, ...uniqueNew];
+          });
+        } else {
+          setBooks(mappedBooks);
+        }
+        setHasMore(pagedList.hasNext);
+      }
+    } catch (error) {
+      console.error('Lỗi khi tải danh sách sách:', error);
+    } finally {
+      setIsPageLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await getCategoriesApi();
+        const data = response.data;
+        if (data && data.success && Array.isArray(data.data)) {
+          const apiCats = data.data;
+          // Display at most the first 3 categories
+          const displayedCats = apiCats.slice(0, 3).map((c: any) => ({
+            name: c.name,
+            slug: c.slug
+          }));
+          setCategories([
+            { name: 'Tất cả', slug: 'all' },
+            ...displayedCats
+          ]);
+          setHasMoreCategories(apiCats.length > 3);
+        }
+      } catch (error) {
+        console.error('Lỗi khi tải danh sách danh mục:', error);
+      }
+    };
+    fetchCategories();
+  }, []);
+
+  useEffect(() => {
+    loadBooks(1, selectedCategory, false);
+    setPageNumber(1);
+  }, [selectedCategory]);
+
+  const handleLoadMore = () => {
+    const nextPage = pageNumber + 1;
+    setPageNumber(nextPage);
+    loadBooks(nextPage, selectedCategory, true);
+  };
+
   return (
     <div>
       {/* Hero Features Block instead of standard Banner */}
@@ -96,10 +191,20 @@ function Home({ books, onSelectBook }: HomeProps) {
             <h2 className="section-title">Sách hiện đang bán</h2>
           </div>
           <div className="filter-tabs">
-            <button className="filter-tab active">Tất cả</button>
-            <button className="filter-tab">Lập trình</button>
-            <button className="filter-tab">Kiến trúc</button>
-            <button className="filter-tab">Database</button>
+            {categories.map(cat => (
+              <button
+                key={cat.slug}
+                className={`filter-tab ${selectedCategory === cat.slug ? 'active' : ''}`}
+                onClick={() => setSelectedCategory(cat.slug)}
+              >
+                {cat.name}
+              </button>
+            ))}
+            {hasMoreCategories && (
+              <span className="view-all-categories-link">
+                Xem tất cả danh mục &gt;&gt;
+              </span>
+            )}
           </div>
         </div>
 
@@ -108,10 +213,25 @@ function Home({ books, onSelectBook }: HomeProps) {
             <BookCard
               key={book.id}
               book={book}
-              onSelect={onSelectBook}
             />
           ))}
         </div>
+
+        {hasMore && (
+          <div className="load-more-container">
+            <button 
+              className="btn-load-more" 
+              onClick={handleLoadMore}
+              disabled={isPageLoading}
+            >
+              {isPageLoading ? (
+                <span className="btn-spinner"></span>
+              ) : (
+                'Xem thêm'
+              )}
+            </button>
+          </div>
+        )}
       </section>
     </div>
   );

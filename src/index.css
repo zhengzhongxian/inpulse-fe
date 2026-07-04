@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&display=swap');
+
 :root {
   --primary: #F66398;
   --primary-hover: #DA447D;
@@ -17,6 +19,7 @@
   --radius-lg: 22px;
   --transition: all 0.2s ease;
   --font: 'Be Vietnam Pro', sans-serif;
+  --font-title: 'Playfair Display', Georgia, serif;
 }
 
 * {
@@ -119,3 +122,23 @@ button {
     transform: translateY(-8px);
   }
 }
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.btn-spinner {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-left-color: #FFFFFF;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+

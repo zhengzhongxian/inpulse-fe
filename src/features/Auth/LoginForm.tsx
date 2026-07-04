@@ -1,58 +1,41 @@
-import React, { useState } from 'react';
-import type { MfaMethod } from '../../types';
-import './Login.css';
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { useLogin } from '../../context/LoginContext';
+import { ROUTES } from '../../config/routes';
+import { toast } from 'react-toastify';
+import './LoginForm.css';
 
-interface LoginProps {
-  loginLoading: boolean;
-  loginStage: 'form' | 'mfa_select' | 'mfa_otp' | 'mfa_totp' | 'mfa_push';
-  setLoginStage: (stage: 'form' | 'mfa_select' | 'mfa_otp' | 'mfa_totp' | 'mfa_push') => void;
-  supportedMethods: MfaMethod[];
-  pushSelectedNum: number | null;
-  pushApproved: boolean;
-  onLoginSubmit: (login: string, pass: string) => void;
-  onSelectMfaMethod: (type: string) => void;
-  onOtpVerify: (code: string) => void;
-  onTotpVerify: (code: string) => void;
-  onBackToMfaSelect: () => void;
-  onBackToHome: () => void;
-}
+function LoginForm() {
+  const {
+    loginError,
+    loginLoading,
+    loginStage,
+    setLoginStage,
+    supportedMethods,
+    pushSelectedNum,
+    pushApproved,
+    handleLoginSubmit: onLoginSubmit,
+    selectMfaMethod: onSelectMfaMethod,
+    handleTotpVerify: onTotpVerify,
+    mfaMaskedEmail = '',
+  } = useLogin();
 
-function Login({
-  loginLoading,
-  loginStage,
-  supportedMethods,
-  pushSelectedNum,
-  pushApproved,
-  onLoginSubmit,
-  onSelectMfaMethod,
-  onOtpVerify,
-  onTotpVerify,
-  onBackToMfaSelect,
-  onBackToHome,
-}: LoginProps) {
+  useEffect(() => {
+    if (loginError) {
+      toast.error(loginError);
+    }
+  }, [loginError]);
+
+  const onBackToMfaSelect = () => setLoginStage('mfa_select');
   const [usernameInput, setUsernameInput] = useState<string>('');
   const [passwordInput, setPasswordInput] = useState<string>('');
   const [showPassword, setShowPassword] = useState<boolean>(false);
 
-  const [otpValue, setOtpValue] = useState<string[]>(Array(6).fill(''));
   const [totpValue, setTotpValue] = useState<string[]>(Array(6).fill(''));
 
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onLoginSubmit(usernameInput, passwordInput);
-  };
-
-  const handleOtpBoxChange = (element: HTMLInputElement, index: number) => {
-    if (isNaN(Number(element.value))) return;
-
-    const nextValue = [...otpValue];
-    nextValue[index] = element.value;
-    setOtpValue(nextValue);
-
-    // Focus next box
-    if (element.nextElementSibling && element.value) {
-      (element.nextElementSibling as HTMLInputElement).focus();
-    }
   };
 
   const handleTotpBoxChange = (element: HTMLInputElement, index: number) => {
@@ -68,9 +51,6 @@ function Login({
     }
   };
 
-  const executeOtpVerify = () => {
-    onOtpVerify(otpValue.join(''));
-  };
 
   const executeTotpVerify = () => {
     onTotpVerify(totpValue.join(''));
@@ -79,13 +59,13 @@ function Login({
   return (
     <section className="login-wrapper">
       <div className="login-card">
-        <div className="login-back-btn" onClick={onBackToHome}>
+        <Link to={ROUTES.HOME} className="login-back-btn" style={{ textDecoration: 'none' }}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <line x1="19" y1="12" x2="5" y2="12"></line>
             <polyline points="12 19 5 12 12 5"></polyline>
           </svg>
           <span>Quay lại trang chủ</span>
-        </div>
+        </Link>
 
         {loginStage === 'form' && (
           <div>
@@ -169,6 +149,16 @@ function Login({
                 </svg>
                 Đăng nhập bằng Google
               </button>
+
+              <div style={{ marginTop: '24px', textAlign: 'center', fontSize: '14px', color: 'var(--text-muted)' }}>
+                Chưa có tài khoản?{' '}
+                <Link 
+                  to={ROUTES.REGISTER}
+                  style={{ color: 'var(--primary)', fontWeight: 600, textDecoration: 'underline' }}
+                >
+                  Đăng ký ngay
+                </Link>
+              </div>
             </form>
           </div>
         )}
@@ -176,7 +166,7 @@ function Login({
         {/* MFA Selector Selection */}
         {loginStage === 'mfa_select' && (
           <div className="mfa-stage">
-            <h2 className="login-title" style={{ color: 'var(--primary)' }}>Bảo mật lớp 2</h2>
+            <h2 className="mfa-title">Bảo mật lớp 2</h2>
             <p className="login-subtitle">
               Tài khoản của bạn đã cấu hình Xác thực 2 lớp (MFA). Vui lòng chọn phương thức:
             </p>
@@ -186,12 +176,29 @@ function Login({
                 supportedMethods.map(method => (
                   <div className="mfa-option" key={method.type} onClick={() => onSelectMfaMethod(method.type)}>
                     <div className="mfa-option-icon">
-                      {method.type === 'EMAIL' ? '📧' : method.type === 'TOTP' ? '📱' : '🔔'}
+                      {method.type === 'EMAIL' && (
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                          <polyline points="22,6 12,13 2,6" />
+                        </svg>
+                      )}
+                      {method.type === 'TOTP' && (
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                          <polyline points="9 11 11 13 15 9" />
+                        </svg>
+                      )}
+                      {method.type === 'PUSH' && (
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                          <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                        </svg>
+                      )}
                     </div>
                     <div className="mfa-option-details">
                       <h4>{method.displayName}</h4>
                       <p>
-                        {method.type === 'EMAIL' && "Nhận mã xác thực 6 số qua hòm thư email liên kết"}
+                        {method.type === 'EMAIL' && "Nhận mã xác thực số khớp qua hòm thư email liên kết"}
                         {method.type === 'TOTP' && "Nhập mã OTP tạo từ ứng dụng Google Authenticator"}
                         {method.type === 'PUSH' && "Đồng ý trực tiếp từ thông báo đẩy trên điện thoại"}
                       </p>
@@ -210,39 +217,97 @@ function Login({
         {/* MFA Email OTP input */}
         {loginStage === 'mfa_otp' && (
           <div className="mfa-stage">
-            <h2 className="login-title">Nhập mã xác thực</h2>
+            <h2 className="mfa-title">Xác nhận số khớp</h2>
             <p className="login-subtitle">
-              Mã OTP 6 chữ số đã được gửi tới email của bạn.
+              Một email chứa 3 lựa chọn số đã được gửi tới {mfaMaskedEmail ? <strong>{mfaMaskedEmail}</strong> : 'email của bạn'}.
             </p>
 
-            <div className="otp-inputs">
-              {otpValue.map((data, index) => (
-                <input
-                  key={index}
-                  type="text"
-                  maxLength={1}
-                  className="otp-box"
-                  value={data}
-                  onChange={(e) => handleOtpBoxChange(e.target, index)}
-                  onFocus={(e) => e.target.select()}
-                />
-              ))}
+            <div className="mfa-challenge-box" style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              margin: '24px 0',
+              padding: '24px 20px',
+              background: 'var(--bg-secondary)',
+              border: '1px solid var(--border)',
+              borderRadius: '0'
+            }}>
+              {pushApproved ? (
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '12px 0' }}>
+                  <div className="spinning-success-circle" style={{
+                    width: '54px',
+                    height: '54px',
+                    border: '4px solid rgba(246, 99, 152, 0.1)',
+                    borderTopColor: 'var(--primary)',
+                    borderRadius: '50%',
+                    animation: 'spin 1s linear infinite',
+                    marginBottom: '16px'
+                  }}></div>
+                  <span style={{ fontSize: '15px', fontWeight: 700, color: 'var(--primary)' }}>Đang xác thực thông tin...</span>
+                </div>
+              ) : (
+                <>
+                  <span style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Số hiển thị trên màn hình:</span>
+                  <div style={{
+                    fontSize: '54px',
+                    fontWeight: 800,
+                    color: 'var(--primary)',
+                    lineHeight: '1',
+                    marginBottom: '16px'
+                  }}>
+                    {pushSelectedNum}
+                  </div>
+                  <p style={{ fontSize: '13.5px', textAlign: 'center', color: 'var(--text-muted)', margin: '0', lineHeight: '1.5' }}>
+                    Vui lòng mở hộp thư, tìm email từ <strong>InkPulse</strong> và nhấp chọn đúng con số được hiển thị ở trên.
+                  </p>
+                </>
+              )}
+            </div>
+
+            <div className="mfa-loading-status" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', margin: '16px 0' }}>
+              {pushApproved ? (
+                <span style={{ fontSize: '13px', color: '#4caf50', fontWeight: 600 }}>Khớp số thành công! Đang chuyển hướng...</span>
+              ) : (
+                <>
+                  <span className="btn-spinner" style={{ display: 'inline-block', width: '16px', height: '16px', borderRadius: '50%', border: '2px solid rgba(246, 99, 152, 0.1)', borderLeftColor: 'var(--primary)', animation: 'spin 1s linear infinite' }}></span>
+                  <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Đang chờ bạn bấm xác nhận từ email...</span>
+                </>
+              )}
+            </div>
+
+            <div style={{ marginTop: '20px', textAlign: 'center' }}>
+              <button
+                className="btn-link"
+                disabled={loginLoading}
+                onClick={() => onSelectMfaMethod('EMAIL')}
+                style={{
+                  color: 'var(--primary)',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  border: 'none',
+                  background: 'none',
+                  textDecoration: 'underline'
+                }}
+              >
+                Gửi lại email xác thực
+              </button>
             </div>
 
             <button 
-              className="btn-primary btn-submit"
-              onClick={executeOtpVerify}
-              disabled={loginLoading}
-            >
-              {loginLoading ? <span className="btn-spinner"></span> : 'Xác thực OTP'}
-            </button>
-
-            <button 
-              className="btn-secondary btn-submit"
-              style={{ marginTop: '12px' }}
+              className="btn-link"
               onClick={onBackToMfaSelect}
+              style={{
+                display: 'block',
+                margin: '16px auto 0 auto',
+                color: 'var(--primary)',
+                fontWeight: 600,
+                border: 'none',
+                background: 'none',
+                cursor: 'pointer',
+                textDecoration: 'underline'
+              }}
             >
-              Quay lại
+              Chọn phương thức bảo mật khác
             </button>
           </div>
         )}
@@ -250,7 +315,7 @@ function Login({
         {/* MFA TOTP code input */}
         {loginStage === 'mfa_totp' && (
           <div className="mfa-stage">
-            <h2 className="login-title">Google Authenticator</h2>
+            <h2 className="mfa-title">Google Authenticator</h2>
             <p className="login-subtitle">
               Nhập mã bảo mật 6 số từ ứng dụng Google Authenticator App.
             </p>
@@ -290,7 +355,7 @@ function Login({
         {/* MFA Push Prompt Google Style */}
         {loginStage === 'mfa_push' && (
           <div className="mfa-stage">
-            <h2 className="login-title">Google Push Prompt</h2>
+            <h2 className="mfa-title">Google Push Prompt</h2>
             <p className="login-subtitle" style={{ marginBottom: '20px' }}>
               Một yêu cầu đăng nhập đã được gửi đến thiết bị di động của bạn.
             </p>
@@ -337,4 +402,4 @@ function Login({
   );
 }
 
-export default Login;
+export default LoginForm;

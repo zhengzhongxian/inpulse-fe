@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&display=swap');
+
 /* Login Page Layout */
 .login-wrapper {
   min-height: 100vh;
@@ -201,6 +203,43 @@
   text-decoration: underline;
 }
 
+.btn-primary {
+  background-color: var(--primary);
+  color: #FFFFFF;
+  border: none;
+  cursor: pointer;
+  transition: var(--transition);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background-color: var(--primary-hover);
+}
+
+.btn-primary:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  background-color: var(--bg-secondary);
+  color: var(--text-main);
+  border: 1px solid var(--border-dark);
+  cursor: pointer;
+  transition: var(--transition);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background-color: var(--border);
+}
+
 .btn-submit {
   width: 100%;
   padding: 13px;
@@ -220,6 +259,18 @@
   font-weight: 500;
   margin-bottom: 20px;
   line-height: 1.5;
+}
+
+/* Button Loading Spinner */
+.btn-spinner {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #FFFFFF;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  vertical-align: middle;
 }
 
 /* Toast Notification Styles matching the user's reference image */
@@ -403,33 +454,54 @@
 
 .mfa-option {
   border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
+  border-radius: 0;
   padding: 16px;
   display: flex;
   align-items: center;
   gap: 16px;
   background-color: var(--bg-secondary);
-  transition: var(--transition);
+  transition: all 0.2s ease;
   cursor: pointer;
 }
 
 .mfa-option:hover {
-  border-color: var(--border-dark);
+  border-color: rgba(246, 99, 152, 0.6);
   background-color: var(--bg-main);
 }
 
 .mfa-option-icon {
-  width: 40px;
-  height: 40px;
-  background-color: #FFFFFF;
+  width: 44px;
+  height: 44px;
+  background: linear-gradient(135deg, var(--primary-light), rgba(246, 99, 152, 0.15));
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--primary);
-  font-size: 20px;
   box-shadow: var(--shadow-sm);
   flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.mfa-option:hover .mfa-option-icon {
+  background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+  color: #FFFFFF;
+}
+
+.mfa-option-icon svg {
+  transition: transform 0.2s ease;
+}
+
+
+.mfa-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 34px;
+  font-weight: 700;
+  font-style: italic;
+  color: #ec4899;
+  margin-top: 0;
+  margin-bottom: 8px;
+  letter-spacing: -0.5px;
 }
 
 .mfa-option-details h4 {

@@ -5,4 +5,5 @@ export interface UserSession {
   displayMode: string;
   choiceLanguage: string;
   deviceTrusted: boolean;
+  mfaEnabled?: boolean;
 }

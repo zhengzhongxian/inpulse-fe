@@ -1,24 +1,17 @@
 import { useState } from 'react';
+import { useLogin } from '../../context/LoginContext';
 import './DevSandbox.css';
 
-interface DevSandboxProps {
-  mfaSessionId: string;
-  deviceId: string;
-  loginStage: string;
-  pushApproved: boolean;
-  pushSelectedNum: number | null;
-  onSimulatePushApprove: () => void;
-}
-
-function DevSandbox({
-  mfaSessionId,
-  deviceId,
-  loginStage,
-  pushApproved,
-  pushSelectedNum,
-  onSimulatePushApprove,
-}: DevSandboxProps) {
+function DevSandbox() {
   const [devConsoleOpen, setDevConsoleOpen] = useState<boolean>(true);
+  const {
+    mfaSessionId,
+    deviceId,
+    loginStage,
+    pushApproved,
+    pushSelectedNum,
+    simulatePushApprove: onSimulatePushApprove,
+  } = useLogin();
 
   if (!mfaSessionId) return null;
 

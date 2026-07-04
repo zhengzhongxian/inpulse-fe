@@ -1,4 +1,4 @@
-import type { Book } from '../../types';
+import type { Book } from '../../../models/Book';
 import './BookModal.css';
 
 interface BookModalProps {
