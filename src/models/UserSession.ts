@@ -6,4 +6,5 @@ export interface UserSession {
   choiceLanguage: string;
   deviceTrusted: boolean;
   mfaEnabled?: boolean;
+  coinBalance?: number;
 }

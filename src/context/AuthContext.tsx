@@ -1,8 +1,9 @@
-import { createContext, useContext, useState, type ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import { toast } from 'react-toastify';
 import type { UserSession } from '../models/UserSession';
-import { logoutApi } from '../api/auth';
+import { logoutApi, getUserProfileApi, getCartCountApi } from '../api/auth';
 import { useNavigation } from './NavigationContext';
+import { decryptAes } from '../utils/crypto';
 
 interface AuthContextType {
   isLoggedIn: boolean;
@@ -11,6 +12,8 @@ interface AuthContextType {
   setUser: (user: UserSession | null) => void;
   userCoins: number;
   setUserCoins: (coins: number) => void;
+  cartCount: number;
+  setCartCount: (count: number) => void;
   completeLoginFlow: (result: any, username: string, userEmail?: string) => void;
   logoutUser: () => Promise<void>;
   handleUpdateUserCoins: (cost: number) => void;
@@ -54,13 +57,55 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           displayMode: 'LIGHT',
           choiceLanguage: 'VI',
           deviceTrusted: true,
-          mfaEnabled: false
+          mfaEnabled: false,
+          coinBalance: 0,
         };
       }
     }
     return null;
   });
-  const [userCoins, setUserCoins] = useState<number>(100);
+  const [userCoins, setUserCoins] = useState<number>(0);
+  const [cartCount, setCartCount] = useState<number>(0);
+
+  // Fetch profile and cart count when logged in (on mount or after login)
+  useEffect(() => {
+    if (!isLoggedIn) return;
+
+    const fetchDynamicState = async () => {
+      try {
+        const [profileRes, cartRes] = await Promise.allSettled([
+          getUserProfileApi(),
+          getCartCountApi(),
+        ]);
+
+        if (profileRes.status === 'fulfilled' && profileRes.value.data?.success) {
+          const profileData = profileRes.value.data.data;
+          const decryptedEmail = decryptAes(profileData.email, profileData.email);
+          setUser((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  email: decryptedEmail,
+                  displayMode: profileData.displayMode ?? prev.displayMode,
+                  choiceLanguage: profileData.choiceLanguage ?? prev.choiceLanguage,
+                  mfaEnabled: profileData.mfaEnabled ?? prev.mfaEnabled,
+                  coinBalance: profileData.coinBalance ?? 0,
+                }
+              : prev
+          );
+          setUserCoins(profileData.coinBalance ?? 0);
+        }
+
+        if (cartRes.status === 'fulfilled' && cartRes.value.data?.success) {
+          setCartCount(cartRes.value.data.data ?? 0);
+        }
+      } catch (err) {
+        // Silently fail — user sees last known state
+      }
+    };
+
+    fetchDynamicState();
+  }, [isLoggedIn]);
 
   const completeLoginFlow = (result: any, username: string, userEmail?: string) => {
     const claims = parseJwt(result.accessToken);
@@ -70,11 +115,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const userSession: UserSession = {
       userId,
       username: tokenUsername,
-      email: userEmail || result.maskedEmail || (tokenUsername.includes('@') ? tokenUsername : `${tokenUsername}@gmail.com`),
+      email: userEmail || result.maskedEmail || '',
       displayMode: 'LIGHT',
       choiceLanguage: 'VI',
       deviceTrusted: true,
-      mfaEnabled: false
+      mfaEnabled: false,
+      coinBalance: 0,
     };
 
     localStorage.setItem('inkpulse_access_token', result.accessToken);
@@ -82,6 +128,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     setUser(userSession);
     setIsLoggedIn(true);
+    // useEffect above will auto-trigger fetchDynamicState after setIsLoggedIn(true)
   };
 
   const logoutUser = async () => {
@@ -99,6 +146,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     setIsLoggedIn(false);
     setUser(null);
+    setUserCoins(0);
+    setCartCount(0);
     setCurrentPage('home');
     toast.success('Đăng xuất thành công!');
   };
@@ -112,6 +161,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (!prev) return null;
       return { ...prev, ...updated };
     });
+    if (updated.coinBalance !== undefined) {
+      setUserCoins(updated.coinBalance);
+    }
   };
 
   return (
@@ -123,6 +175,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUser,
         userCoins,
         setUserCoins,
+        cartCount,
+        setCartCount,
         completeLoginFlow,
         logoutUser,
         handleUpdateUserCoins,

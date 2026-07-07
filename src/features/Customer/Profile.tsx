@@ -1,13 +1,14 @@
 import { useState, useEffect, useRef } from 'react';
+import { decryptAes } from '../../utils/crypto';
 import { toast } from 'react-toastify';
 import { useAuth } from '../../context/AuthContext';
-import { 
-  getUserProfileApi, 
-  updateUserProfileApi, 
-  createUserAddressApi, 
-  updateUserAddressApi, 
-  deleteUserAddressApi, 
-  changePasswordApi 
+import {
+  getUserProfileApi,
+  updateUserProfileApi,
+  createUserAddressApi,
+  updateUserAddressApi,
+  deleteUserAddressApi,
+  changePasswordApi
 } from '../../api/auth';
 import { getProvincesApi, getDistrictsApi, getWardsApi } from '../../api/address';
 import './Profile.css';
@@ -16,7 +17,6 @@ function Profile() {
   const {
     user,
     setUser,
-    setIsLoggedIn,
     logoutUser: onLogout,
   } = useAuth();
 
@@ -303,7 +303,12 @@ function Profile() {
       }
 
       const res = await updateUserProfileApi(formData);
-      setUser(res.data.data);
+      const profileData = res.data.data;
+      setUser({
+        ...profileData,
+        email: decryptAes(profileData.email, profileData.email),
+        coinBalance: profileData.coinBalance ?? user?.coinBalance ?? 0,
+      });
       setAvatarFile(null);
       toast.success('Lưu thông tin cá nhân thành công!');
     } catch (err: any) {
@@ -330,7 +335,7 @@ function Profile() {
       formData.append('timezone', timezone);
       formData.append('displayMode', displayMode);
       formData.append('choiceLanguage', language);
-      
+
       const activeMfaTypes = mfaEnabled ? mfaTypes : [];
       if (activeMfaTypes.length === 0) {
         // Send an empty value so the backend receives an empty list and disables MFA,
@@ -341,9 +346,14 @@ function Profile() {
       }
 
       const res = await updateUserProfileApi(formData);
-      setUser(res.data.data);
-      setMfaEnabled(res.data.data.mfaEnabled || false);
-      setMfaTypes(res.data.data.mfaTypes || []);
+      const profileData = res.data.data;
+      setUser({
+        ...profileData,
+        email: decryptAes(profileData.email, profileData.email),
+        coinBalance: profileData.coinBalance ?? user?.coinBalance ?? 0,
+      });
+      setMfaEnabled(profileData.mfaEnabled || false);
+      setMfaTypes(profileData.mfaTypes || []);
       toast.success('Lưu cài đặt hệ thống thành công!');
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Lưu cài đặt thất bại.');
@@ -517,8 +527,8 @@ function Profile() {
             <div className="profile-avatar-section" style={{ justifyContent: 'center' }}>
               <div className="profile-avatar-container" onClick={handleAvatarClick}>
                 <img
-                  src={avatarUrl.startsWith('avatar/') 
-                    ? `http://avatar.inkpulse.com/${avatarUrl}` 
+                  src={avatarUrl.startsWith('avatar/')
+                    ? `http://avatar.inkpulse.com/${avatarUrl}`
                     : avatarUrl || `https://api.dicebear.com/7.x/lorelei/svg?seed=${user?.username || 'default'}`}
                   alt="Avatar"
                   className="profile-avatar-img"
@@ -532,11 +542,11 @@ function Profile() {
                     <circle cx="12" cy="13" r="4"></circle>
                   </svg>
                 </div>
-                <input 
-                  type="file" 
-                  ref={fileInputRef} 
-                  onChange={handleAvatarFileChange} 
-                  accept="image/*" 
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleAvatarFileChange}
+                  accept="image/*"
                   style={{ display: 'none' }}
                 />
               </div>
@@ -615,8 +625,8 @@ function Profile() {
                       {formatDateDisplay(dob)}
                     </span>
                   </div>
-                  <svg 
-                    width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#888888" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" 
+                  <svg
+                    width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#888888" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
                     style={{ position: 'absolute', right: '14px', top: '50%', transition: 'transform 0.2s ease', transformOrigin: 'center', transform: showDatePicker ? 'translateY(-50%) rotate(180deg)' : 'translateY(-50%)' }}
                   >
                     <polyline points="6 9 12 15 18 9"></polyline>
@@ -740,7 +750,7 @@ function Profile() {
                       {genderOptions.find(o => o.value === gender)?.label}
                     </span>
                   </div>
-                  <svg 
+                  <svg
                     className={`chevron-icon ${showGenderDropdown ? 'open' : ''}`}
                     width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
                   >
@@ -786,7 +796,7 @@ function Profile() {
                 <h3 style={{ fontSize: '18px', fontWeight: '700', color: 'var(--text-main)', margin: 0 }}>
                   Địa chỉ giao hàng
                 </h3>
-                <button 
+                <button
                   type="button"
                   className="btn-view-details"
                   onClick={() => setShowAddressModal(true)}
@@ -853,23 +863,23 @@ function Profile() {
                   <span className="logout-text">Đăng xuất</span>
                 </button>
               )}
-              <button 
-                className="btn-primary" 
+              <button
+                className="btn-primary"
                 onClick={handleSaveInfo}
                 disabled={isSavingInfo}
                 style={{ position: 'relative' }}
               >
                 {isSavingInfo && (
-                  <div 
-                    style={{ 
-                      position: 'absolute', 
-                      top: 0, 
-                      left: 0, 
-                      width: '100%', 
-                      height: '100%', 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      justifyContent: 'center' 
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      width: '100%',
+                      height: '100%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
                     }}
                   >
                     <div className="spinner-loader" style={{ margin: 0 }} />
@@ -900,7 +910,7 @@ function Profile() {
                     <span className="selected-value-text">
                       {displayModeOptions.find(o => o.value === displayMode)?.label}
                     </span>
-                    <svg 
+                    <svg
                       className={`chevron-icon ${showDisplayModeDropdown ? 'open' : ''}`}
                       width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
                     >
@@ -941,7 +951,7 @@ function Profile() {
                     <span className="selected-value-text">
                       {languageOptions.find(o => o.value === language)?.label}
                     </span>
-                    <svg 
+                    <svg
                       className={`chevron-icon ${showLanguageDropdown ? 'open' : ''}`}
                       width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
                     >
@@ -975,7 +985,7 @@ function Profile() {
                     <span className="settings-label settings-label-mfa">Xác thực 2 lớp</span>
                     <span className="settings-desc">Bật xác thực bảo mật 2 lớp qua các phương thức sau để bảo vệ tài khoản tốt hơn.</span>
                   </div>
-                  <div 
+                  <div
                     className={`custom-toggle-switch ${mfaEnabled ? 'active' : ''}`}
                     onClick={() => {
                       const nextState = !mfaEnabled;
@@ -992,8 +1002,8 @@ function Profile() {
                 {mfaEnabled && (
                   <div className="mfa-types-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginTop: '16px', animation: 'fadeIn 0.2s ease' }}>
                     {[
-                      { 
-                        key: 'EMAIL', 
+                      {
+                        key: 'EMAIL',
                         label: 'Email OTP',
                         logo: (
                           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -1002,8 +1012,8 @@ function Profile() {
                           </svg>
                         )
                       },
-                      { 
-                        key: 'TOTP', 
+                      {
+                        key: 'TOTP',
                         label: 'Google Authenticator (TOTP)',
                         logo: (
                           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -1012,8 +1022,8 @@ function Profile() {
                           </svg>
                         )
                       },
-                      { 
-                        key: 'PUSH', 
+                      {
+                        key: 'PUSH',
                         label: 'App Push Prompt',
                         logo: (
                           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -1022,8 +1032,8 @@ function Profile() {
                           </svg>
                         )
                       },
-                      { 
-                        key: 'SMS', 
+                      {
+                        key: 'SMS',
                         label: 'Tin nhắn SMS',
                         logo: (
                           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -1034,8 +1044,8 @@ function Profile() {
                     ].map(item => {
                       const isChecked = mfaTypes.includes(item.key);
                       return (
-                        <label 
-                          key={item.key} 
+                        <label
+                          key={item.key}
                           className={`mfa-option-card ${isChecked ? 'active' : ''}`}
                         >
                           <input
@@ -1079,23 +1089,23 @@ function Profile() {
                   <span className="logout-text">Đăng xuất</span>
                 </button>
               )}
-              <button 
-                className="btn-primary" 
+              <button
+                className="btn-primary"
                 onClick={handleSaveSettings}
                 disabled={isSavingSettings}
                 style={{ position: 'relative' }}
               >
                 {isSavingSettings && (
-                  <div 
-                    style={{ 
-                      position: 'absolute', 
-                      top: 0, 
-                      left: 0, 
-                      width: '100%', 
-                      height: '100%', 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      justifyContent: 'center' 
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      width: '100%',
+                      height: '100%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
                     }}
                   >
                     <div className="spinner-loader" style={{ margin: 0 }} />
@@ -1114,15 +1124,15 @@ function Profile() {
             <div className="profile-fields-grid" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
               <div style={{ maxWidth: '400px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 <h3 style={{ fontSize: '16px', fontWeight: '700', margin: '0 0 8px 0', color: '#9333EA' }}>Đổi mật khẩu</h3>
-                
+
                 <div className="profile-field-group" style={{ width: '100%' }}>
                   <span className="profile-field-label">Mật khẩu hiện tại</span>
                   <div style={{ position: 'relative', width: '100%' }}>
-                    <input 
+                    <input
                       type={showOldPassword ? 'text' : 'password'}
-                      className="profile-field-input" 
+                      className="profile-field-input"
                       style={{ paddingRight: '40px' }}
-                      value={oldPassword} 
+                      value={oldPassword}
                       onChange={(e) => setOldPassword(e.target.value)}
                       placeholder="Nhập mật khẩu hiện tại..."
                     />
@@ -1157,15 +1167,15 @@ function Profile() {
                     </button>
                   </div>
                 </div>
-                
+
                 <div className="profile-field-group" style={{ width: '100%' }}>
                   <span className="profile-field-label">Mật khẩu mới</span>
                   <div style={{ position: 'relative', width: '100%' }}>
-                    <input 
+                    <input
                       type={showNewPassword ? 'text' : 'password'}
-                      className="profile-field-input" 
+                      className="profile-field-input"
                       style={{ paddingRight: '40px' }}
-                      value={newPassword} 
+                      value={newPassword}
                       onChange={(e) => {
                         setNewPassword(e.target.value);
                         if (passwordMismatch) {
@@ -1205,15 +1215,15 @@ function Profile() {
                     </button>
                   </div>
                 </div>
-                
+
                 <div className="profile-field-group" style={{ width: '100%' }}>
                   <span className="profile-field-label">Xác nhận mật khẩu mới</span>
                   <div style={{ position: 'relative', width: '100%' }}>
-                    <input 
+                    <input
                       type={showConfirmPassword ? 'text' : 'password'}
                       className={`profile-field-input ${passwordMismatch ? 'input-error' : ''}`}
                       style={{ paddingRight: '40px' }}
-                      value={confirmPassword} 
+                      value={confirmPassword}
                       onChange={(e) => {
                         setConfirmPassword(e.target.value);
                         if (passwordMismatch) {
@@ -1261,24 +1271,24 @@ function Profile() {
                   </div>
                 </div>
 
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   className="btn-password-submit"
                   onClick={handleChangePasswordSubmit}
                   disabled={isChangingPassword}
                   style={{ position: 'relative' }}
                 >
                   {isChangingPassword && (
-                    <div 
-                      style={{ 
-                        position: 'absolute', 
-                        top: 0, 
-                        left: 0, 
-                        width: '100%', 
-                        height: '100%', 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        justifyContent: 'center' 
+                    <div
+                      style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        height: '100%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
                       }}
                     >
                       <div className="spinner-loader" style={{ margin: 0 }} />
@@ -1304,7 +1314,7 @@ function Profile() {
           <div className="modal-content-custom" onClick={(e) => e.stopPropagation()}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid var(--border)', paddingBottom: '12px' }}>
               <h2 style={{ fontSize: '18px', fontWeight: '800', margin: 0, color: '#F484A8' }}>Quản lý địa chỉ giao hàng</h2>
-              <button 
+              <button
                 type="button"
                 onClick={() => setShowAddressModal(false)}
                 style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '20px', fontWeight: 'bold', color: 'var(--text-light)' }}
@@ -1316,8 +1326,8 @@ function Profile() {
             {!showAddressForm ? (
               <>
                 {/* Dashed pink Add Address button with bookmark plus icon */}
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   className="btn-add-address-custom"
                   onClick={() => handleOpenAddressForm()}
                 >
@@ -1332,12 +1342,12 @@ function Profile() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '350px', overflowY: 'auto', paddingRight: '4px' }}>
                   {addresses && addresses.length > 0 ? (
                     addresses.map((addr) => (
-                      <div 
-                        key={addr.id} 
-                        style={{ 
-                          padding: '14px', 
-                          border: '1px solid var(--border-dark)', 
-                          backgroundColor: '#ffffff', 
+                      <div
+                        key={addr.id}
+                        style={{
+                          padding: '14px',
+                          border: '1px solid var(--border-dark)',
+                          backgroundColor: '#ffffff',
                           borderRadius: 'var(--radius-sm)', /* Restored border-radius */
                           display: 'flex',
                           justifyContent: 'space-between',
@@ -1357,17 +1367,17 @@ function Profile() {
                           </p>
                         </div>
                         <div style={{ display: 'flex', gap: '8px' }}>
-                          <button 
-                            type="button" 
+                          <button
+                            type="button"
                             onClick={() => handleOpenAddressForm(addr)}
-                            style={{ 
+                            style={{
                               display: 'flex',
                               alignItems: 'center',
                               gap: '6px',
-                              padding: '6px 12px', 
-                              fontSize: '12.5px', 
-                              border: 'none', 
-                              background: 'transparent', 
+                              padding: '6px 12px',
+                              fontSize: '12.5px',
+                              border: 'none',
+                              background: 'transparent',
                               color: 'var(--primary)',
                               cursor: 'pointer',
                               borderRadius: '4px',
@@ -1383,17 +1393,17 @@ function Profile() {
                             </svg>
                             Sửa
                           </button>
-                          <button 
-                            type="button" 
+                          <button
+                            type="button"
                             onClick={() => handleDeleteAddress(addr.id)}
-                            style={{ 
+                            style={{
                               display: 'flex',
                               alignItems: 'center',
                               gap: '6px',
-                              padding: '6px 12px', 
-                              fontSize: '12.5px', 
-                              border: 'none', 
-                              background: 'transparent', 
+                              padding: '6px 12px',
+                              fontSize: '12.5px',
+                              border: 'none',
+                              background: 'transparent',
                               color: '#dc2626',
                               cursor: 'pointer',
                               borderRadius: '4px',
@@ -1427,20 +1437,20 @@ function Profile() {
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
                   <div className="profile-field-group">
                     <span className="profile-field-label">Nhãn địa chỉ</span>
-                    <input 
-                      type="text" 
-                      className="profile-field-input" 
-                      value={formLabel} 
+                    <input
+                      type="text"
+                      className="profile-field-input"
+                      value={formLabel}
                       onChange={(e) => setFormLabel(e.target.value)}
                       placeholder="Ví dụ: Nhà riêng, Văn phòng..."
                     />
                   </div>
                   <div className="profile-field-group">
                     <span className="profile-field-label">Số điện thoại</span>
-                    <input 
-                      type="text" 
-                      className="profile-field-input phone-input-custom" 
-                      value={formPhone} 
+                    <input
+                      type="text"
+                      className="profile-field-input phone-input-custom"
+                      value={formPhone}
                       onChange={(e) => setFormPhone(e.target.value.replace(/\D/g, ''))}
                       placeholder="Số điện thoại nhận hàng..."
                     />
@@ -1458,7 +1468,7 @@ function Profile() {
                       <span className="selected-value-text">
                         {provinces.find(p => p.provinceId === selectedProvince)?.provinceName || 'Chọn Tỉnh/Thành'}
                       </span>
-                      <svg 
+                      <svg
                         className={`chevron-icon ${showProvinceDropdown ? 'open' : ''}`}
                         width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
                       >
@@ -1504,7 +1514,7 @@ function Profile() {
                       <span className="selected-value-text">
                         {districts.find(d => d.districtId === selectedDistrict)?.districtName || 'Chọn Quận/Huyện'}
                       </span>
-                      <svg 
+                      <svg
                         className={`chevron-icon ${showDistrictDropdown ? 'open' : ''}`}
                         width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
                       >
@@ -1550,7 +1560,7 @@ function Profile() {
                       <span className="selected-value-text">
                         {wards.find(w => w.wardCode === selectedWard)?.wardName || 'Chọn Phường/Xã'}
                       </span>
-                      <svg 
+                      <svg
                         className={`chevron-icon ${showWardDropdown ? 'open' : ''}`}
                         width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
                       >
@@ -1588,41 +1598,41 @@ function Profile() {
 
                 <div className="profile-field-group" style={{ marginBottom: '20px' }}>
                   <span className="profile-field-label">Địa chỉ chi tiết</span>
-                  <input 
-                    type="text" 
-                    className="profile-field-input" 
-                    value={formStreet} 
+                  <input
+                    type="text"
+                    className="profile-field-input"
+                    value={formStreet}
                     onChange={(e) => setFormStreet(e.target.value)}
                     placeholder="Số nhà, tên đường..."
                   />
                 </div>
 
                 <div className="address-form-actions">
-                  <button 
-                    type="button" 
+                  <button
+                    type="button"
                     className="btn-address-cancel"
                     onClick={() => setShowAddressForm(false)}
                   >
                     Hủy
                   </button>
-                  <button 
-                    type="button" 
-                    className="btn-address-save" 
+                  <button
+                    type="button"
+                    className="btn-address-save"
                     onClick={handleSaveAddress}
                     disabled={isSavingAddress}
                     style={{ position: 'relative' }}
                   >
                     {isSavingAddress && (
-                      <div 
-                        style={{ 
-                          position: 'absolute', 
-                          top: 0, 
-                          left: 0, 
-                          width: '100%', 
-                          height: '100%', 
-                          display: 'flex', 
-                          alignItems: 'center', 
-                          justifyContent: 'center' 
+                      <div
+                        style={{
+                          position: 'absolute',
+                          top: 0,
+                          left: 0,
+                          width: '100%',
+                          height: '100%',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
                         }}
                       >
                         <div className="spinner-loader" style={{ margin: 0 }} />

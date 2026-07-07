@@ -40,7 +40,7 @@ function BookCard({ book }: { book: Book }) {
     ? `${buildBookDetailPath(book.id)}?editionId=${minPriceEdition.id}`
     : buildBookDetailPath(book.id);
 
-  const handleCardClick = (e: React.MouseEvent) => {
+  const handleCardClick = () => {
     // Avoid triggering card navigation when interacting with other elements if needed
     setSelectedDetailBook(book);
     navigate(detailPath);
@@ -55,7 +55,7 @@ function BookCard({ book }: { book: Book }) {
       style={{ textDecoration: 'none', cursor: 'pointer' }}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
-          handleCardClick(null as any);
+          handleCardClick();
         }
       }}
     >

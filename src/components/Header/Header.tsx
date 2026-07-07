@@ -7,7 +7,7 @@ import type { BookResponse } from '../../api/books';
 import './Header.css';
 
 function Header() {
-  const { isLoggedIn, userCoins: coins } = useAuth();
+  const { isLoggedIn, userCoins: coins, cartCount } = useAuth();
   const [searchKeyword, setSearchKeyword] = useState('');
   const [recommendations, setRecommendations] = useState<BookResponse[]>([]);
   const [showRecs, setShowRecs] = useState(false);
@@ -148,14 +148,14 @@ function Header() {
         <div className="nav-actions">
           {/* Giỏ hàng icon */}
           <div className="header-icon-wrap">
-            <button className="header-icon-btn" onClick={() => alert('Giỏ hàng của bạn đang được nâng cấp!')}>
+            <Link to={ROUTES.CART} className="header-icon-btn">
               <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
                 <line x1="3" y1="6" x2="21" y2="6"></line>
                 <path d="M16 10a4 4 0 0 1-8 0"></path>
               </svg>
-              <span className="badge-count cart-badge">3</span>
-            </button>
+              {cartCount > 0 && <span className="badge-count cart-badge">{cartCount}</span>}
+            </Link>
           </div>
 
           {/* Tài khoản icon */}

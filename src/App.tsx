@@ -11,6 +11,10 @@ import Profile from './pages/Profile';
 import BookDetail from './pages/BookDetail';
 import Register from './pages/Register';
 import BooksList from './pages/BooksList';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
+import RegisterGoogle from './pages/RegisterGoogle';
+import Cart from './pages/Cart';
 import { NavigationProvider, useNavigation } from './context/NavigationContext';
 import { AuthProvider } from './context/AuthContext';
 import { LoginProvider } from './context/LoginContext';
@@ -34,6 +38,10 @@ function AppContent() {
           <Route path={ROUTES.PROFILE} element={<Profile />} />
           <Route path={ROUTES.LOGIN} element={<Login />} />
           <Route path={ROUTES.REGISTER} element={<Register />} />
+          <Route path={ROUTES.FORGOT_PASSWORD} element={<ForgotPassword />} />
+          <Route path={ROUTES.RESET_PASSWORD} element={<ResetPassword />} />
+          <Route path={ROUTES.REGISTER_GOOGLE} element={<RegisterGoogle />} />
+          <Route path={ROUTES.CART} element={<Cart />} />
           <Route path="*" element={<Navigate to={ROUTES.HOME} replace />} />
         </Routes>
       </main>

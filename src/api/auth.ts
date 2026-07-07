@@ -169,3 +169,23 @@ export const deleteUserAddressApi = (addressId: string) => {
 export const changePasswordApi = (passwordData: any) => {
   return authClient.post('/users/change-password', passwordData);
 };
+
+export const forgotPasswordApi = (forgotData: { email: string; deviceId: string; browserFingerprint: string }) => {
+  return authClient.post('/auth/forgot-password', forgotData);
+};
+
+export const resetPasswordApi = (resetData: any) => {
+  return authClient.post('/auth/reset-password', resetData);
+};
+
+export const googleLoginApi = (googleData: any) => {
+  return authClient.post('/auth/google', googleData);
+};
+
+export const googleRegisterApi = (registerData: any) => {
+  return authClient.post('/auth/google/register', registerData);
+};
+
+export const getCartCountApi = () => {
+  return authClient.get<{ success: boolean; data: number }>('/cart/count');
+};
