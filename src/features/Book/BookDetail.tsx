@@ -198,9 +198,18 @@ function BookDetail() {
     orderId: string;
     orderCode: string;
     checkoutUrl: string | null;
+    qrCode?: string | null;
+    expiredAt?: number | null;
   } | null>(null);
   const [isPolling, setIsPolling] = useState<boolean>(false);
   const [paymentSuccess, setPaymentSuccess] = useState<boolean>(false);
+  const [timeLeft, setTimeLeft] = useState<number | null>(null);
+
+  const formatTime = (seconds: number) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  };
 
   const [currentSlide, setCurrentSlide] = useState<number>(0);
   const [activeTab, setActiveTab] = useState<'intro' | 'specs'>('intro');
@@ -239,6 +248,13 @@ function BookDetail() {
           } else {
             setUseNewAddress(true);
           }
+          const profileData = res.data?.data;
+          if (profileData) {
+            const fName = profileData.firstName || '';
+            const lName = profileData.lastName || '';
+            const fullName = `${fName} ${lName}`.trim() || user.username || '';
+            setNewReceiverName(fullName);
+          }
         } catch (err) {
           console.error('Lỗi khi tải địa chỉ:', err);
         }
@@ -253,9 +269,9 @@ function BookDetail() {
         }
       };
 
+      setNewReceiverName(user.username || '');
       fetchProfile();
       fetchProvinces();
-      setNewReceiverName(user.username || '');
     }
   }, [isBuying, user]);
 
@@ -396,13 +412,15 @@ function BookDetail() {
       const res = await createOrderApi(payload);
       if (res.data?.success) {
         const orderData = res.data.data;
+        toast.success(res.data.message || 'Đặt đơn hàng thành công!');
+
         setOrderResult({
           orderId: orderData.orderId,
           orderCode: orderData.orderCode,
-          checkoutUrl: orderData.checkoutUrl
+          checkoutUrl: orderData.checkoutUrl,
+          qrCode: orderData.qrCode
         });
-        toast.success(res.data.message || 'Đặt đơn hàng thành công!');
-        
+
         if (paymentMethod === 'PAYOS' && orderData.checkoutUrl) {
           setIsPolling(true);
         } else {
@@ -447,12 +465,39 @@ function BookDetail() {
     return () => clearInterval(interval);
   }, [isPolling, orderResult]);
 
+  // PayOS Expiration Timer
+  useEffect(() => {
+    if (orderResult?.expiredAt) {
+      const calculateTimeLeft = () => {
+        const now = Math.floor(Date.now() / 1000);
+        const difference = orderResult.expiredAt - now;
+        return difference > 0 ? difference : 0;
+      };
+
+      setTimeLeft(calculateTimeLeft());
+
+      const timer = setInterval(() => {
+        const remaining = calculateTimeLeft();
+        setTimeLeft(remaining);
+        if (remaining <= 0) {
+          setIsPolling(false);
+          clearInterval(timer);
+        }
+      }, 1000);
+
+      return () => clearInterval(timer);
+    } else {
+      setTimeLeft(null);
+    }
+  }, [orderResult]);
+
   const handleCancelPurchase = () => {
     setIsBuying(false);
     setShippingFee(null);
     setOrderResult(null);
     setIsPolling(false);
     setPaymentSuccess(false);
+    setTimeLeft(null);
     setUseNewAddress(false);
     setSelectedProvinceId(null);
     setSelectedDistrictId(null);
@@ -815,8 +860,9 @@ function BookDetail() {
                           type="text"
                           className="profile-field-input"
                           value={newReceiverName}
-                          onChange={(e) => setNewReceiverName(e.target.value)}
+                          disabled
                           placeholder="Họ và tên..."
+                          style={{ cursor: 'not-allowed' }}
                         />
                       </div>
                       <div className="profile-field-group">
@@ -1043,55 +1089,111 @@ function BookDetail() {
                   <p style={{ margin: 0, fontSize: '13px', color: 'var(--text-muted)' }}>Mở ứng dụng ngân hàng / ví điện tử quét mã QR dưới đây</p>
                   
                   {orderResult.checkoutUrl ? (
-                    <img
-                      className="payos-qr-img"
-                      src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(orderResult.checkoutUrl)}`}
-                      alt="PayOS QR Code"
-                      width="220"
-                      height="220"
-                    />
+                    <div style={{ position: 'relative', width: '220px', height: '220px', margin: '20px auto' }}>
+                      <img
+                        className="payos-qr-img"
+                        src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(orderResult.qrCode || orderResult.checkoutUrl)}`}
+                        alt="PayOS QR Code"
+                        style={{ 
+                          width: '100%', 
+                          height: '100%', 
+                          borderRadius: '12px',
+                          opacity: timeLeft === 0 ? 0.15 : 1,
+                          transition: 'opacity 0.3s ease'
+                        }}
+                      />
+                      {timeLeft === 0 && (
+                        <div style={{
+                          position: 'absolute',
+                          top: 0,
+                          left: 0,
+                          width: '100%',
+                          height: '100%',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          color: '#ef4444',
+                          fontWeight: '700',
+                          fontSize: '18px',
+                          backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                          borderRadius: '12px'
+                        }}>
+                          Mã hết hạn
+                        </div>
+                      )}
+                    </div>
                   ) : (
                     <div style={{ height: '220px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Không tạo được link QR.</div>
                   )}
 
-                  <div className="payos-status-text">
-                    <div className="spin-loader" />
-                    <span>Đang chờ xác nhận thanh toán tự động...</span>
+                  {timeLeft !== null && (
+                    <div style={{
+                      margin: '12px 0',
+                      color: timeLeft === 0 ? '#ef4444' : 'var(--text-light)',
+                      fontSize: '14px',
+                      fontWeight: '500'
+                    }}>
+                      {timeLeft === 0 ? (
+                        <span>Mã thanh toán đã hết hạn</span>
+                      ) : (
+                        <span>Thời gian thanh toán còn lại: <strong style={{ color: 'var(--primary)' }}>{formatTime(timeLeft)}</strong></span>
+                      )}
+                    </div>
+                  )}
+
+                  <div className="payos-status-text" style={{ justifyContent: 'center', marginTop: '16px' }}>
+                    {timeLeft !== 0 && <div className="spin-loader" />}
+                    <span style={{ color: timeLeft === 0 ? '#ef4444' : 'inherit' }}>
+                      {timeLeft === 0 ? 'Hết thời gian thanh toán' : 'Đang chờ xác nhận thanh toán tự động...'}
+                    </span>
                   </div>
+
                   <div style={{ fontSize: '13.5px', marginTop: '16px', color: 'var(--text-light)', borderTop: '1px solid var(--border-dark)', paddingTop: '12px' }}>
                     <p style={{ margin: '0 0 6px 0' }}>Mã giao dịch: <strong>#{orderResult.orderCode}</strong></p>
-                    <button
-                      type="button"
-                      className="btn-checkout-submit"
-                      style={{ width: '100%', marginTop: '6px', backgroundColor: '#00a85e', color: '#ffffff', borderColor: '#00a85e' }}
-                      onClick={async () => {
-                        try {
-                          await mockPaymentApi(orderResult.orderCode);
-                          toast.success('Đã gửi yêu cầu giả lập thanh toán thành công!');
-                        } catch (e) {
-                          toast.error('Có lỗi xảy ra khi giả lập thanh toán.');
-                        }
-                      }}
-                    >
-                      🧪 Giả lập thanh toán thành công (Test)
-                    </button>
+                    {orderResult.checkoutUrl && timeLeft !== 0 && (
+                      <a
+                        href={orderResult.checkoutUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ display: 'block', marginBottom: '12px', color: '#00a85e', fontSize: '13px', fontWeight: '600', textDecoration: 'underline' }}
+                      >
+                        Nhấp vào đây để thanh toán trực tiếp qua link PayOS
+                      </a>
+                    )}
                     <button type="button" className="btn-checkout-cancel" style={{ width: '100%', marginTop: '6px' }} onClick={handleCancelPurchase}>
-                      Hủy & Đóng
+                      {timeLeft === 0 ? 'Đóng' : 'Hủy & Đóng'}
                     </button>
                   </div>
                 </div>
               ) : (
-                <div style={{ maxWidth: '460px', margin: '24px auto', padding: '24px', border: '1px solid #22c55e', backgroundColor: '#f0fdf4', borderRadius: '8px' }}>
-                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2.5" style={{ marginBottom: '12px' }}>
+                <div style={{ maxWidth: '600px', margin: '40px auto', padding: '32px', border: 'none', backgroundColor: 'transparent', textAlign: 'center' }}>
+                  <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2.5" style={{ marginBottom: '20px', display: 'inline-block' }}>
                     <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
                     <polyline points="22 4 12 14.01 9 11.01"></polyline>
                   </svg>
-                  <h3 style={{ color: '#16a34a', margin: '0 0 8px 0', fontSize: '18px', fontWeight: '700' }}>Đặt đơn hàng thành công!</h3>
-                  <p style={{ margin: '0 0 16px 0', fontSize: '14px', color: '#15803d', lineHeight: '1.5' }}>
-                    Đơn hàng mã số <strong>#{orderResult.orderCode}</strong> đã được hệ thống ghi nhận và chuẩn bị đóng gói vận chuyển.
+                  <h3 style={{ color: '#22c55e', margin: '0 0 16px 0', fontSize: '28px', fontWeight: '700', fontFamily: 'var(--font)' }}>Đặt đơn hàng thành công!</h3>
+                  <p style={{ margin: '0 0 28px 0', fontSize: '16px', color: '#111827', lineHeight: '1.6' }}>
+                    Đơn hàng mã số <strong style={{ color: 'var(--primary)', fontWeight: '700' }}>#{orderResult.orderCode}</strong> đã được hệ thống ghi nhận và chuẩn bị đóng gói vận chuyển.
                   </p>
-                  <button type="button" className="btn-primary" style={{ padding: '8px 24px' }} onClick={handleCancelPurchase}>
-                    Quay lại sách
+                  <button
+                    type="button"
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: 'var(--primary)',
+                      fontWeight: '600',
+                      fontSize: '16px',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      cursor: 'pointer',
+                      padding: '8px 16px',
+                      transition: 'none',
+                      margin: '0 auto'
+                    }}
+                    onClick={handleCancelPurchase}
+                  >
+                    ← Quay lại sách
                   </button>
                 </div>
               )}

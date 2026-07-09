@@ -37,24 +37,51 @@ export interface CreateOrderResponse {
   orderStatus: string;
   paymentStatus: string;
   checkoutUrl: string | null;
+  qrCode?: string | null;
   message: string;
 }
 
-export interface OrderDetailResponse {
-  id: string;
+export interface OrderSummaryResponse {
+  orderId: string;
   orderCode: string;
   orderStatus: string;
-  paymentStatus: string;
   paymentMethod: string;
-  shippingFee: number;
-  orderFee: number;
-  totalAmount: number;
+  paymentStatus: string;
+  orderFeeDisplay: string;
+  shippingFeeDisplay: string;
+  totalDisplay: string;
+  totalItems: number;
+  firstItemTitle: string;
+  firstItemThumbnail: string;
+  createdAt: string;
+}
+
+export interface OrderItemDetailResponse {
+  editionId: string;
+  bookTitle: string;
+  authorName: string;
+  thumbnailUrl: string;
+  quantity: number;
+  priceDisplay: string;
+  subtotalDisplay: string;
+}
+
+export interface OrderDetailResponse {
+  orderId: string;
+  userId: string;
+  orderCode: string;
+  ghnOrderCode: string | null;
+  orderStatus: string;
+  paymentMethod: string;
+  paymentStatus: string;
   receiverName: string;
   recipientPhone: string;
-  streetAddress: string;
-  provinceName: string;
-  districtName: string;
-  wardName: string;
+  shippingAddress: string;
+  addressLabel: string;
+  orderFeeDisplay: string;
+  shippingFeeDisplay: string;
+  totalDisplay: string;
+  items: OrderItemDetailResponse[];
   createdAt: string;
 }
 
@@ -68,6 +95,10 @@ export const createOrderApi = (data: CreateOrderRequest) => {
 
 export const getOrderDetailApi = (orderId: string) => {
   return authClient.get<any>(`/orders/${orderId}`);
+};
+
+export const getMyOrdersApi = (page: number = 1, size: number = 10) => {
+  return authClient.get<any>(`/orders?page=${page}&size=${size}`);
 };
 
 export const mockPaymentApi = (orderCode: string) => {

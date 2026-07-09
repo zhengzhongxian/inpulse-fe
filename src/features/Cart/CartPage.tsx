@@ -64,6 +64,13 @@ function CartPage() {
   const [orderResult, setOrderResult] = useState<any | null>(null);
   const [isPolling, setIsPolling] = useState<boolean>(false);
   const [paymentSuccess, setPaymentSuccess] = useState<boolean>(false);
+  const [timeLeft, setTimeLeft] = useState<number | null>(null);
+
+  const formatTime = (seconds: number) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  };
 
   // Load addresses when checkout is active
   useEffect(() => {
@@ -79,6 +86,13 @@ function CartPage() {
           } else {
             setUseNewAddress(true);
           }
+          const profileData = res.data?.data;
+          if (profileData) {
+            const fName = profileData.firstName || '';
+            const lName = profileData.lastName || '';
+            const fullName = `${fName} ${lName}`.trim() || user.username || '';
+            setNewReceiverName(fullName);
+          }
         } catch (err) {
           console.error('Lỗi khi tải địa chỉ:', err);
         }
@@ -93,9 +107,9 @@ function CartPage() {
         }
       };
 
+      setNewReceiverName(user.username || '');
       fetchProfile();
       fetchProvinces();
-      setNewReceiverName(user.username || '');
     }
   }, [isCheckingOut, user]);
 
@@ -132,6 +146,7 @@ function CartPage() {
         setPage(data.currentPage);
         setTotalPages(data.totalPages);
         setTotalCount(data.totalCount);
+        setCartCount(data.totalCount);
 
         // Pre-select all available items
         const inStockIds = fetchedItems.filter((i: any) => i.stockSufficient).map((i: any) => i.id);
@@ -163,6 +178,13 @@ function CartPage() {
       setIsLoading(false);
     }
   }, [user, page]);
+
+  // Sync cart count when payment succeeds
+  useEffect(() => {
+    if (paymentSuccess) {
+      syncCartCount();
+    }
+  }, [paymentSuccess]);
 
   // Quantity changes
   const handleQuantityChange = async (itemId: string, newQty: number, stockQty: number) => {
@@ -364,19 +386,21 @@ function CartPage() {
       const res = await createOrderApi(payload);
       if (res.data?.success) {
         const orderData = res.data.data;
+        toast.success(res.data.message || 'Đặt đơn hàng thành công!');
+        await syncCartCount();
+
         setOrderResult({
           orderId: orderData.orderId,
           orderCode: orderData.orderCode,
-          checkoutUrl: orderData.checkoutUrl
+          checkoutUrl: orderData.checkoutUrl,
+          qrCode: orderData.qrCode
         });
-        toast.success(res.data.message || 'Đặt đơn hàng thành công!');
-        
+
         if (paymentMethod === 'PAYOS' && orderData.checkoutUrl) {
           setIsPolling(true);
         } else {
           setPaymentSuccess(true);
         }
-        await syncCartCount();
       } else {
         toast.error(res.data?.message || 'Có lỗi xảy ra khi tạo đơn hàng.');
       }
@@ -416,12 +440,39 @@ function CartPage() {
     return () => clearInterval(interval);
   }, [isPolling, orderResult]);
 
+  // PayOS Expiration Timer
+  useEffect(() => {
+    if (orderResult?.expiredAt) {
+      const calculateTimeLeft = () => {
+        const now = Math.floor(Date.now() / 1000);
+        const difference = orderResult.expiredAt - now;
+        return difference > 0 ? difference : 0;
+      };
+
+      setTimeLeft(calculateTimeLeft());
+
+      const timer = setInterval(() => {
+        const remaining = calculateTimeLeft();
+        setTimeLeft(remaining);
+        if (remaining <= 0) {
+          setIsPolling(false);
+          clearInterval(timer);
+        }
+      }, 1000);
+
+      return () => clearInterval(timer);
+    } else {
+      setTimeLeft(null);
+    }
+  }, [orderResult]);
+
   const handleCancelPurchase = () => {
     setIsCheckingOut(false);
     setShippingFee(null);
     setOrderResult(null);
     setIsPolling(false);
     setPaymentSuccess(false);
+    setTimeLeft(null);
     setUseNewAddress(false);
     setSelectedProvinceId(null);
     setSelectedDistrictId(null);
@@ -451,17 +502,46 @@ function CartPage() {
     return (
       <div className="cart-wrapper" style={{ maxWidth: '600px', margin: '40px auto' }}>
         {paymentSuccess ? (
-          <div className="payos-qr-box" style={{ borderColor: '#16a34a', animation: 'fadeIn 0.4s ease' }}>
-            <div style={{ fontSize: '48px', marginBottom: '16px' }}>🎉</div>
-            <h2 style={{ color: '#16a34a', fontFamily: "'Playfair Display', serif", fontSize: '24px', margin: '0 0 10px 0' }}>Thanh Toán Thành Công!</h2>
-            <p style={{ color: 'var(--text-muted)', fontSize: '14.5px', marginBottom: '24px' }}>
-              Đơn hàng <strong>#{orderResult.orderCode}</strong> của bạn đã được ghi nhận thành công và đang được xử lý.
+          <div className="payos-qr-box" style={{ border: 'none', backgroundColor: 'transparent', boxShadow: 'none', animation: 'fadeIn 0.4s ease', textAlign: 'center', maxWidth: '600px', margin: '40px auto', padding: '32px' }}>
+            <div style={{ fontSize: '64px', marginBottom: '20px' }}>🎉</div>
+            <h2 style={{ color: '#22c55e', fontFamily: 'var(--font)', fontSize: '28px', fontWeight: '700', margin: '0 0 16px 0' }}>Thanh Toán Thành Công!</h2>
+            <p style={{ color: '#111827', fontSize: '16px', marginBottom: '28px', lineHeight: '1.6' }}>
+              Đơn hàng <strong style={{ color: 'var(--primary)', fontWeight: '700' }}>#{orderResult.orderCode}</strong> của bạn đã được ghi nhận thành công và đang được xử lý.
             </p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <button className="btn-primary" onClick={() => navigate(ROUTES.BOOKS)} style={{ width: '100%' }}>
-                Tiếp tục mua sắm
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'center' }}>
+              <button
+                type="button"
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--primary)',
+                  fontWeight: '600',
+                  fontSize: '16px',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  cursor: 'pointer',
+                  padding: '8px 0',
+                  transition: 'none'
+                }}
+                onClick={() => navigate(ROUTES.BOOKS)}
+              >
+                ← Tiếp tục mua sắm
               </button>
-              <button className="btn-checkout-cancel" onClick={handleCancelPurchase} style={{ width: '100%', marginTop: '6px' }}>
+              <button
+                type="button"
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--text-light)',
+                  fontSize: '14px',
+                  cursor: 'pointer',
+                  padding: '4px 0',
+                  textDecoration: 'underline',
+                  marginTop: '6px'
+                }}
+                onClick={handleCancelPurchase}
+              >
                 Về giỏ hàng
               </button>
             </div>
@@ -472,20 +552,68 @@ function CartPage() {
             <p style={{ color: 'var(--text-muted)', fontSize: '13px', margin: '0 0 16px 0' }}>
               Đơn hàng <strong>#{orderResult.orderCode}</strong>. Quét mã QR dưới đây bằng ứng dụng ngân hàng của bạn để hoàn tất thanh toán.
             </p>
+            
             {orderResult.checkoutUrl ? (
-              <img
-                className="payos-qr-img"
-                src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(orderResult.checkoutUrl)}`}
-                alt="QR Code"
-              />
+              <div style={{ position: 'relative', width: '220px', height: '220px', margin: '20px auto' }}>
+                <img
+                  className="payos-qr-img"
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(orderResult.qrCode || orderResult.checkoutUrl)}`}
+                  alt="QR Code"
+                  style={{ 
+                    width: '100%', 
+                    height: '100%', 
+                    borderRadius: '12px',
+                    opacity: timeLeft === 0 ? 0.15 : 1,
+                    transition: 'opacity 0.3s ease'
+                  }}
+                />
+                {timeLeft === 0 && (
+                  <div style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    height: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#ef4444',
+                    fontWeight: '700',
+                    fontSize: '18px',
+                    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                    borderRadius: '12px'
+                  }}>
+                    Mã hết hạn
+                  </div>
+                )}
+              </div>
             ) : (
               <div style={{ padding: '40px 0' }}>Không thể tạo liên kết quét mã QR.</div>
             )}
-            <div className="payos-status-text">
-              <div className="spin-loader" />
-              <span>Chờ quét mã thanh toán...</span>
+
+            {timeLeft !== null && (
+              <div style={{
+                margin: '12px 0',
+                color: timeLeft === 0 ? '#ef4444' : 'var(--text-light)',
+                fontSize: '14px',
+                fontWeight: '500'
+              }}>
+                {timeLeft === 0 ? (
+                  <span>Mã thanh toán đã hết hạn</span>
+                ) : (
+                  <span>Thời gian thanh toán còn lại: <strong style={{ color: 'var(--primary)' }}>{formatTime(timeLeft)}</strong></span>
+                )}
+              </div>
+            )}
+
+            <div className="payos-status-text" style={{ justifyContent: 'center', marginTop: '16px' }}>
+              {timeLeft !== 0 && <div className="spin-loader" />}
+              <span style={{ color: timeLeft === 0 ? '#ef4444' : 'inherit' }}>
+                {timeLeft === 0 ? 'Hết thời gian thanh toán' : 'Chờ quét mã thanh toán...'}
+              </span>
             </div>
-            {orderResult.checkoutUrl && (
+
+            {orderResult.checkoutUrl && timeLeft !== 0 && (
               <a
                 href={orderResult.checkoutUrl}
                 target="_blank"
@@ -495,23 +623,8 @@ function CartPage() {
                 Nhấp vào đây để thanh toán trực tiếp qua link PayOS
               </a>
             )}
-            <button
-              type="button"
-              className="btn-checkout-submit"
-              style={{ width: '100%', marginTop: '16px', backgroundColor: '#00a85e', color: '#ffffff', borderColor: '#00a85e' }}
-              onClick={async () => {
-                try {
-                  await mockPaymentApi(orderResult.orderCode);
-                  toast.success('Đã gửi yêu cầu giả lập thanh toán thành công!');
-                } catch (e) {
-                  toast.error('Có lỗi xảy ra khi giả lập thanh toán.');
-                }
-              }}
-            >
-              🧪 Giả lập thanh toán thành công (Test)
-            </button>
             <button type="button" className="btn-checkout-cancel" style={{ width: '100%', marginTop: '20px' }} onClick={handleCancelPurchase}>
-              Hủy thanh toán & Quay lại
+              {timeLeft === 0 ? 'Quay lại giỏ hàng' : 'Hủy thanh toán & Quay lại'}
             </button>
           </div>
         )}
@@ -535,12 +648,30 @@ function CartPage() {
         </div>
       ) : items.length === 0 ? (
         <div className="cart-empty-state">
-          <div className="cart-empty-card">
-            <div className="cart-empty-icon">🛒</div>
-            <h2>Giỏ hàng trống</h2>
-            <p>Khám phá bộ sưu tập sách lập trình phong phú của chúng tôi để mua sắm ngay.</p>
-            <Link to={ROUTES.BOOKS} className="btn-primary">
-              Tiếp Tục Mua Sắm
+          <div className="cart-empty-card" style={{ fontFamily: "'Be Vietnam Pro', sans-serif" }}>
+            <h2 style={{ color: 'var(--primary)', fontSize: '22px', fontWeight: '600', marginBottom: '12px', fontFamily: "'Be Vietnam Pro', sans-serif" }}>
+              Giỏ hàng trống
+            </h2>
+            <p style={{ marginBottom: '20px', color: 'var(--text-light)', fontFamily: "'Be Vietnam Pro', sans-serif" }}>
+              Khám phá bộ sưu tập sách lập trình phong phú của chúng tôi để mua sắm ngay.
+            </p>
+            <Link 
+              to={ROUTES.BOOKS} 
+              style={{ 
+                color: 'var(--primary)', 
+                fontWeight: '600', 
+                fontSize: '15px', 
+                textDecoration: 'none', 
+                display: 'inline-flex', 
+                alignItems: 'center', 
+                gap: '4px',
+                fontFamily: "'Be Vietnam Pro', sans-serif",
+                transition: 'opacity 0.2s ease'
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.8')}
+              onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
+            >
+              Tiếp tục mua sắm »
             </Link>
           </div>
         </div>
@@ -838,8 +969,9 @@ function CartPage() {
                             type="text"
                             className="profile-field-input"
                             value={newReceiverName}
-                            onChange={(e) => setNewReceiverName(e.target.value)}
+                            disabled
                             placeholder="Họ và tên..."
+                            style={{ cursor: 'not-allowed' }}
                           />
                         </div>
                         <div className="profile-field-group">

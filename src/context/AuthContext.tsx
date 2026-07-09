@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import { toast } from 'react-toastify';
 import type { UserSession } from '../models/UserSession';
-import { logoutApi, getUserProfileApi, getCartCountApi } from '../api/auth';
+import { logoutApi, logOutClient, getUserProfileApi, getCartCountApi, setAccessToken, refreshSession } from '../api/auth';
 import { useNavigation } from './NavigationContext';
 import { decryptAes } from '../utils/crypto';
 
@@ -42,30 +42,41 @@ const parseJwt = (token: string) => {
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const { setCurrentPage } = useNavigation();
 
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(() => {
-    return localStorage.getItem('inkpulse_access_token') !== null;
-  });
-  const [user, setUser] = useState<UserSession | null>(() => {
-    const token = localStorage.getItem('inkpulse_access_token');
-    if (token) {
-      const claims = parseJwt(token);
-      if (claims) {
-        return {
-          userId: claims.sub || '',
-          username: claims.username || 'user',
-          email: '',
-          displayMode: 'LIGHT',
-          choiceLanguage: 'VI',
-          deviceTrusted: true,
-          mfaEnabled: false,
-          coinBalance: 0,
-        };
-      }
-    }
-    return null;
-  });
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+  const [user, setUser] = useState<UserSession | null>(null);
   const [userCoins, setUserCoins] = useState<number>(0);
   const [cartCount, setCartCount] = useState<number>(0);
+  const [initializing, setInitializing] = useState<boolean>(true);
+
+  // Silent refresh session initialization on app mount
+  useEffect(() => {
+    const initSession = async () => {
+      try {
+        const token = await refreshSession();
+        if (token) {
+          const claims = parseJwt(token);
+          if (claims) {
+            setUser({
+              userId: claims.sub || '',
+              username: claims.username || 'user',
+              email: '',
+              displayMode: 'LIGHT',
+              choiceLanguage: 'VI',
+              deviceTrusted: true,
+              mfaEnabled: false,
+              coinBalance: 0,
+            });
+            setIsLoggedIn(true);
+          }
+        }
+      } catch (err) {
+        console.error('Silent refresh failed on mount:', err);
+      } finally {
+        setInitializing(false);
+      }
+    };
+    initSession();
+  }, []);
 
   // Fetch profile and cart count when logged in (on mount or after login)
   useEffect(() => {
@@ -90,6 +101,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                   choiceLanguage: profileData.choiceLanguage ?? prev.choiceLanguage,
                   mfaEnabled: profileData.mfaEnabled ?? prev.mfaEnabled,
                   coinBalance: profileData.coinBalance ?? 0,
+                  isSocialAccount: (profileData.isSocialAccount ?? profileData.socialAccount) ?? false,
                 }
               : prev
           );
@@ -123,27 +135,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       coinBalance: 0,
     };
 
-    localStorage.setItem('inkpulse_access_token', result.accessToken);
-    localStorage.setItem('inkpulse_refresh_token', result.refreshToken);
+    setAccessToken(result.accessToken);
 
     setUser(userSession);
     setIsLoggedIn(true);
-    // useEffect above will auto-trigger fetchDynamicState after setIsLoggedIn(true)
   };
 
   const logoutUser = async () => {
-    const rToken = localStorage.getItem('inkpulse_refresh_token');
-    if (rToken) {
-      try {
-        await logoutApi(rToken);
-      } catch (e) {
-        // Silently logout locally
-      }
+    try {
+      await logoutApi();
+    } catch (e) {
+      // Silently logout locally
     }
 
-    localStorage.removeItem('inkpulse_access_token');
-    localStorage.removeItem('inkpulse_refresh_token');
-
+    logOutClient();
     setIsLoggedIn(false);
     setUser(null);
     setUserCoins(0);
@@ -165,6 +170,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setUserCoins(updated.coinBalance);
     }
   };
+
+  if (initializing) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100vh', backgroundColor: '#ffffff', position: 'relative' }}>
+        <div style={{ textAlign: 'center' }}>
+          <img src="/favicon.svg" alt="Loading..." style={{ width: '96px', height: '96px', animation: 'pulse-fav 1.5s infinite ease-in-out' }} />
+          <style>{`
+            @keyframes pulse-fav {
+              0% { transform: scale(0.85); opacity: 0.6; }
+              50% { transform: scale(1.05); opacity: 1; }
+              100% { transform: scale(0.85); opacity: 0.6; }
+            }
+          `}</style>
+        </div>
+        <div style={{ position: 'absolute', bottom: '24px', left: '50%', transform: 'translateX(-50%)', opacity: 0.8, height: '48px', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <img src="/logo.png" alt="InkPulse Logo" style={{ height: '100px', maxWidth: '220px', objectFit: 'contain', marginTop: '-26px', marginBottom: '-30px' }} />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <AuthContext.Provider

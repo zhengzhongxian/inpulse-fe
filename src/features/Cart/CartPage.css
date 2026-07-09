@@ -1,5 +1,5 @@
 .cart-wrapper {
-  max-width: 1200px;
+  max-width: 1000px;
   margin: 40px auto;
   padding: 0 24px;
   animation: fadeIn 0.4s ease;
@@ -30,7 +30,7 @@
 
 .cart-single-column {
   width: 100%;
-  max-width: 1200px;
+  max-width: 1000px;
   margin: 0 auto;
 }
 
@@ -206,11 +206,10 @@
 
 .cart-empty-card {
   max-width: 480px;
-  padding: 40px;
-  background: #FFFFFF;
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+  padding: 24px;
+  background: transparent;
+  border: none;
+  box-shadow: none;
   text-align: center;
 }
 

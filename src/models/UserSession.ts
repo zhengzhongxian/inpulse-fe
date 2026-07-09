@@ -7,4 +7,5 @@ export interface UserSession {
   deviceTrusted: boolean;
   mfaEnabled?: boolean;
   coinBalance?: number;
+  isSocialAccount?: boolean;
 }

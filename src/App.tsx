@@ -15,6 +15,8 @@ import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import RegisterGoogle from './pages/RegisterGoogle';
 import Cart from './pages/Cart';
+import CheckoutResult from './pages/CheckoutResult';
+import OrderDetail from './pages/OrderDetail';
 import { NavigationProvider, useNavigation } from './context/NavigationContext';
 import { AuthProvider } from './context/AuthContext';
 import { LoginProvider } from './context/LoginContext';
@@ -35,13 +37,15 @@ function AppContent() {
           <Route path={ROUTES.HOME} element={<Home />} />
           <Route path={ROUTES.BOOK_DETAIL} element={<BookDetail />} />
           <Route path={ROUTES.BOOKS} element={<BooksList />} />
-          <Route path={ROUTES.PROFILE} element={<Profile />} />
+           <Route path={ROUTES.PROFILE} element={<Profile />} />
+          <Route path={ROUTES.ORDER_DETAIL} element={<OrderDetail />} />
           <Route path={ROUTES.LOGIN} element={<Login />} />
           <Route path={ROUTES.REGISTER} element={<Register />} />
           <Route path={ROUTES.FORGOT_PASSWORD} element={<ForgotPassword />} />
           <Route path={ROUTES.RESET_PASSWORD} element={<ResetPassword />} />
           <Route path={ROUTES.REGISTER_GOOGLE} element={<RegisterGoogle />} />
           <Route path={ROUTES.CART} element={<Cart />} />
+          <Route path={ROUTES.CHECKOUT_RESULT} element={<CheckoutResult />} />
           <Route path="*" element={<Navigate to={ROUTES.HOME} replace />} />
         </Routes>
       </main>

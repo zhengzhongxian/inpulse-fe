@@ -435,7 +435,7 @@ input:checked+.switch-slider:before {
   font-weight: 600;
   font-size: 14px;
   cursor: pointer;
-  border-radius: 0px !important; /* No border-radius as requested */
+  border-radius: 6px !important;
   transition: background-color 0.2s ease, padding 0.2s ease;
 }
 
@@ -465,7 +465,7 @@ input:checked+.switch-slider:before {
 
 /* Scope the sharp corners override only to the Profile page wrapper */
 .profile-wrapper .btn-primary {
-  border-radius: 0px !important;
+  border-radius: 6px !important;
 }
 
 /* Readonly Email input field styles */
@@ -740,4 +740,250 @@ input:checked+.switch-slider:before {
   to {
     transform: rotate(360deg);
   }
+}
+
+/* Orders Tab Styles */
+.order-list-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.order-card {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background-color: var(--bg-main);
+  overflow: hidden;
+}
+
+.btn-view-detail-pink {
+  background: none;
+  border: none;
+  color: var(--primary);
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: 'Be Vietnam Pro', sans-serif;
+  transition: opacity 0.2s ease;
+}
+
+.btn-view-detail-pink:hover {
+  opacity: 0.8;
+}
+
+.order-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  background-color: #fafafa;
+  border-bottom: 1px solid var(--border);
+}
+
+.order-code-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.order-date-text {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.order-card-body {
+  display: flex;
+  padding: 20px;
+  gap: 16px;
+  align-items: center;
+}
+
+.order-item-thumb {
+  width: 70px;
+  height: 90px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+}
+
+.order-item-info-wrap {
+  flex: 1;
+}
+
+.order-item-title-text {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-style: italic;
+  font-size: 17px;
+  font-weight: 700;
+  color: #9333ea;
+  margin-bottom: 4px;
+}
+
+.order-detail-book-title {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-style: italic;
+  font-size: 15px;
+  font-weight: 700;
+  color: #9333ea;
+}
+
+.order-item-desc-text {
+  font-size: 13.5px;
+  color: var(--text-muted);
+}
+
+.order-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.order-total-block {
+  font-size: 14px;
+  color: var(--text-light);
+}
+
+.order-total-val {
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--primary);
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 20px;
+  margin-right: 8px;
+}
+
+.status-badge.pending {
+  background-color: #fef3c7;
+  color: #d97706;
+}
+
+.status-badge.processing {
+  background-color: #dbeafe;
+  color: #2563eb;
+}
+
+.status-badge.completed {
+  background-color: #dcfce7;
+  color: #15803d;
+}
+
+.status-badge.cancelled {
+  background-color: #fef2f2;
+  color: #ef4444;
+}
+
+.status-badge.paid {
+  background-color: #dcfce7;
+  color: #15803d;
+}
+
+/* Modal details */
+.order-detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-bottom: 24px;
+  font-family: 'Be Vietnam Pro', sans-serif;
+}
+
+.order-detail-section-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1.5px solid var(--border);
+  padding-bottom: 6px;
+}
+
+.order-detail-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: 13.5px;
+  color: var(--text-light);
+}
+
+.order-detail-row.total {
+  font-weight: 700;
+  color: var(--text-main);
+  font-size: 15px;
+}
+
+.order-detail-items-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 16px;
+  font-family: 'Be Vietnam Pro', sans-serif;
+}
+
+.order-detail-items-table th {
+  text-align: left;
+  padding: 10px;
+  background-color: #f9fafb;
+  border-bottom: 2px solid var(--border);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.order-detail-items-table td {
+  padding: 12px 10px;
+  border-bottom: 1px solid var(--border);
+  font-size: 13.5px;
+  color: var(--text-light);
+}
+
+/* Pagination */
+.orders-pagination {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 24px;
+}
+
+.orders-pagination-btn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background-color: transparent;
+  color: var(--text-light);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.orders-pagination-btn:hover {
+  background-color: #fafafa;
+  color: var(--text-main);
+}
+
+.orders-pagination-btn.active {
+  background-color: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+
+.orders-pagination-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }

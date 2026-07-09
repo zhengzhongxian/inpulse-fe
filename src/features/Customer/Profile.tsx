@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { decryptAes } from '../../utils/crypto';
 import { toast } from 'react-toastify';
 import { useAuth } from '../../context/AuthContext';
@@ -11,6 +12,7 @@ import {
   changePasswordApi
 } from '../../api/auth';
 import { getProvincesApi, getDistrictsApi, getWardsApi } from '../../api/address';
+import { getMyOrdersApi } from '../../api/order';
 import './Profile.css';
 
 function Profile() {
@@ -20,8 +22,13 @@ function Profile() {
     logoutUser: onLogout,
   } = useAuth();
 
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
   // Navigation tab control
-  const [activeTab, setActiveTab] = useState<'info' | 'settings' | 'password'>('info');
+  const tabParam = searchParams.get('tab');
+  const defaultTab = (tabParam === 'orders' || tabParam === 'settings' || tabParam === 'password') ? tabParam : 'info';
+  const [activeTab, setActiveTab] = useState<'info' | 'settings' | 'password' | 'orders'>(defaultTab as any);
 
   // Local state for profile fields
   const [firstName, setFirstName] = useState<string>('');
@@ -34,6 +41,15 @@ function Profile() {
   const [timezone, setTimezone] = useState<string>('Asia/Ho_Chi_Minh');
   const [addresses, setAddresses] = useState<any[]>([]);
   const [mfaTypes, setMfaTypes] = useState<string[]>([]);
+
+  // Order list states
+  const [orders, setOrders] = useState<any[]>([]);
+  const [ordersPage, setOrdersPage] = useState<number>(1);
+  const [ordersTotalPages, setOrdersTotalPages] = useState<number>(1);
+  const [isLoadingOrders, setIsLoadingOrders] = useState<boolean>(false);
+  const [selectedOrderDetail, setSelectedOrderDetail] = useState<any | null>(null);
+  const [showOrderDetailModal, setShowOrderDetailModal] = useState<boolean>(false);
+  const [isLoadingOrderDetail, setIsLoadingOrderDetail] = useState<boolean>(false);
 
   // Avatar upload file reference
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
@@ -129,6 +145,33 @@ function Profile() {
     };
     initData();
   }, []);
+
+  const fetchOrders = async (targetPage: number) => {
+    setIsLoadingOrders(true);
+    try {
+      const res = await getMyOrdersApi(targetPage, 5);
+      if (res.data.success && res.data.data) {
+        setOrders(res.data.data.items || []);
+        setOrdersPage(res.data.data.currentPage);
+        setOrdersTotalPages(res.data.data.totalPages);
+      }
+    } catch (err) {
+      console.error('Lỗi khi tải danh sách đơn hàng:', err);
+      toast.error('Không thể tải danh sách đơn hàng.');
+    } finally {
+      setIsLoadingOrders(false);
+    }
+  };
+
+  const handleViewOrderDetail = (orderId: string) => {
+    navigate(`/order/${orderId}`);
+  };
+
+  useEffect(() => {
+    if (activeTab === 'orders') {
+      fetchOrders(ordersPage);
+    }
+  }, [activeTab, ordersPage]);
 
   // Outside click listener for custom select boxes
   useEffect(() => {
@@ -512,11 +555,22 @@ function Profile() {
           Cài đặt hệ thống
         </button>
         <button
-          className={`profile-tab-btn ${activeTab === 'password' ? 'active' : ''}`}
-          onClick={() => setActiveTab('password')}
+          className={`profile-tab-btn ${activeTab === 'orders' ? 'active' : ''}`}
+          onClick={() => {
+            setActiveTab('orders');
+            setOrdersPage(1);
+          }}
         >
-          Đổi mật khẩu
+          Đơn hàng của tôi
         </button>
+        {!user?.isSocialAccount && (
+          <button
+            className={`profile-tab-btn ${activeTab === 'password' ? 'active' : ''}`}
+            onClick={() => setActiveTab('password')}
+          >
+            Đổi mật khẩu
+          </button>
+        )}
       </div>
 
       {/* Content Body */}
@@ -1119,7 +1173,7 @@ function Profile() {
           </div>
         )}
 
-        {activeTab === 'password' && (
+        {activeTab === 'password' && !user?.isSocialAccount && (
           <div className="profile-section-fade">
             <div className="profile-fields-grid" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
               <div style={{ maxWidth: '400px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -1304,6 +1358,107 @@ function Profile() {
                 </button>
               </div>
             </div>
+          </div>
+        )}
+
+        {activeTab === 'orders' && (
+          <div className="profile-section-fade">
+            <h3 style={{ fontSize: '18px', fontWeight: '800', margin: '0 0 20px 0', color: 'var(--primary)' }}>
+              Đơn hàng của tôi
+            </h3>
+
+            {isLoadingOrders ? (
+              <div style={{ display: 'flex', justifyContent: 'center', padding: '40px 0' }}>
+                <div className="spinner" style={{ width: '32px', height: '32px' }} />
+              </div>
+            ) : orders.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--text-muted)' }}>
+                Bạn chưa có đơn hàng nào.
+              </div>
+            ) : (
+              <div className="order-list-container">
+                {orders.map((order) => (
+                  <div key={order.orderId} className="order-card">
+                    <div className="order-card-header">
+                      <div>
+                        <span className="order-code-title">Mã đơn hàng: {order.orderCode}</span>
+                        <div className="order-date-text">Ngày đặt: {order.createdAt}</div>
+                      </div>
+                      <div style={{ display: 'flex', gap: '4px' }}>
+                        <span className={`status-badge ${order.orderStatus.toLowerCase()}`}>
+                          {order.orderStatus === 'PENDING' && 'Chờ xác nhận'}
+                          {order.orderStatus === 'PROCESSING' && 'Đang xử lý'}
+                          {order.orderStatus === 'COMPLETED' && 'Hoàn thành'}
+                          {order.orderStatus === 'CANCELLED' && 'Đã hủy'}
+                        </span>
+                        <span className={`status-badge ${order.paymentStatus.toLowerCase() === 'paid' ? 'paid' : 'pending'}`}>
+                          {order.paymentStatus === 'PENDING' && 'Chờ thanh toán'}
+                          {order.paymentStatus === 'PAID' && 'Đã thanh toán'}
+                          {order.paymentStatus === 'CANCELLED' && 'Đã hủy'}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="order-card-body">
+                      {order.firstItemThumbnail ? (
+                        <img src={order.firstItemThumbnail} alt={order.firstItemTitle} className="order-item-thumb" />
+                      ) : (
+                        <div className="order-item-thumb" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f3f4f6', fontSize: '24px' }}>📚</div>
+                      )}
+                      <div className="order-item-info-wrap">
+                        <div className="order-item-title-text">{order.firstItemTitle}</div>
+                        {order.totalItems > 1 && (
+                          <div className="order-item-desc-text">và {order.totalItems - 1} sản phẩm khác</div>
+                        )}
+                        <div className="order-item-desc-text" style={{ marginTop: '4px' }}>
+                          Hình thức: {order.paymentMethod === 'PAYOS' ? <span style={{ color: '#16a34a', fontWeight: '700' }}>Thanh toán PayOS</span> : 'Thanh toán COD'}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="order-card-footer">
+                      <div className="order-total-block">
+                        Tổng tiền: <span className="order-total-val">{order.totalDisplay}</span>
+                      </div>
+                      <button
+                        type="button"
+                        className="btn-view-detail-pink"
+                        onClick={() => handleViewOrderDetail(order.orderId)}
+                      >
+                        Xem chi tiết &gt;&gt;
+                      </button>
+                    </div>
+                  </div>
+                ))}
+
+                {/* Pagination */}
+                {ordersTotalPages > 1 && (
+                  <div className="orders-pagination">
+                    <button
+                      className="orders-pagination-btn"
+                      onClick={() => setOrdersPage(prev => Math.max(prev - 1, 1))}
+                      disabled={ordersPage === 1}
+                    >
+                      &lt;
+                    </button>
+                    {Array.from({ length: ordersTotalPages }, (_, idx) => idx + 1).map((pNum) => (
+                      <button
+                        key={pNum}
+                        className={`orders-pagination-btn ${ordersPage === pNum ? 'active' : ''}`}
+                        onClick={() => setOrdersPage(pNum)}
+                      >
+                        {pNum}
+                      </button>
+                    ))}
+                    <button
+                      className="orders-pagination-btn"
+                      onClick={() => setOrdersPage(prev => Math.min(prev + 1, ordersTotalPages))}
+                      disabled={ordersPage === ordersTotalPages}
+                    >
+                      &gt;
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -1648,6 +1803,8 @@ function Profile() {
           </div>
         </div>
       )}
+
+
     </div>
   );
 }

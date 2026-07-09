@@ -7,10 +7,23 @@ export const authClient = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true, // Send HttpOnly Cookie in cross-origin requests
 });
+
+// In-Memory Access Token Storage
+let accessTokenMemory: string | null = null;
+
+export const setAccessToken = (token: string | null) => {
+  accessTokenMemory = token;
+};
+
+export const getAccessToken = () => {
+  return accessTokenMemory;
+};
 
 let isRefreshing = false;
 let failedQueue: any[] = [];
+let activeRefreshPromise: Promise<string | null> | null = null;
 
 const processQueue = (error: any, token: string | null = null) => {
   failedQueue.forEach((prom) => {
@@ -26,14 +39,37 @@ const processQueue = (error: any, token: string | null = null) => {
 // Add request interceptor to attach Bearer Access Token
 authClient.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('inkpulse_access_token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    if (accessTokenMemory) {
+      config.headers.Authorization = `Bearer ${accessTokenMemory}`;
     }
     return config;
   },
   (error) => Promise.reject(error)
 );
+
+export const refreshSession = async (): Promise<string | null> => {
+  if (activeRefreshPromise) {
+    return activeRefreshPromise;
+  }
+
+  activeRefreshPromise = (async () => {
+    try {
+      const res = await axios.post(`${API_BASE_URL}/auth/refresh`, {}, { withCredentials: true });
+      if (res.data && res.data.success && res.data.data) {
+        const token = res.data.data.accessToken;
+        setAccessToken(token);
+        return token;
+      }
+    } catch (err) {
+      console.error('Silent refresh failed on session init:', err);
+    } finally {
+      activeRefreshPromise = null;
+    }
+    return null;
+  })();
+
+  return activeRefreshPromise;
+};
 
 // Add response interceptor to handle 401/403 and rotate refresh token
 authClient.interceptors.response.use(
@@ -62,18 +98,11 @@ authClient.interceptors.response.use(
       originalRequest._retry = true;
       isRefreshing = true;
 
-      const refreshToken = localStorage.getItem('inkpulse_refresh_token');
-      if (!refreshToken) {
-        isRefreshing = false;
-        return Promise.reject(error);
-      }
-
       try {
-        const res = await axios.post(`${API_BASE_URL}/auth/refresh`, { refreshToken });
-        const { accessToken: newAccessToken, refreshToken: newRefreshToken } = res.data.data;
-
-        localStorage.setItem('inkpulse_access_token', newAccessToken);
-        localStorage.setItem('inkpulse_refresh_token', newRefreshToken);
+        const newAccessToken = await refreshSession();
+        if (!newAccessToken) {
+          throw new Error('Refresh session returned empty token');
+        }
 
         authClient.defaults.headers.common['Authorization'] = `Bearer ${newAccessToken}`;
         originalRequest.headers['Authorization'] = `Bearer ${newAccessToken}`;
@@ -98,8 +127,7 @@ authClient.interceptors.response.use(
 );
 
 export const logOutClient = () => {
-  localStorage.removeItem('inkpulse_access_token');
-  localStorage.removeItem('inkpulse_refresh_token');
+  setAccessToken(null);
   window.location.reload();
 };
 
@@ -127,8 +155,8 @@ export const simulateApprovePushApi = (mfaSessionId: string) => {
   return authClient.post('/auth/mfa/approve', { mfaSessionId });
 };
 
-export const logoutApi = (refreshToken: string) => {
-  return authClient.post('/auth/logout', { refreshToken });
+export const logoutApi = () => {
+  return authClient.post('/auth/logout', {});
 };
 
 export const registerSendOtpApi = (email: string, deviceId: string, browserFingerprint: string) => {
