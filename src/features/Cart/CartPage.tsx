@@ -709,6 +709,17 @@ function CartPage() {
                 <div className="cart-item-info">
                   <h3 className="item-title">{item.bookTitle}</h3>
                   <span className="item-author">{item.authorName}</span>
+                  <div className="item-meta" style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '8px', fontSize: '12px', color: '#718096' }}>
+                    {item.editionNumber !== undefined && (
+                      <span>Phiên bản: #{item.editionNumber}</span>
+                    )}
+                    {item.coverType && (
+                      <span>Loại bìa: {item.coverType === 'HARD_COVER' ? 'Bìa cứng' : item.coverType === 'SOFT_COVER' ? 'Bìa mềm' : 'Đặc biệt'}</span>
+                    )}
+                    {item.isbn && (
+                      <span>ISBN: {item.isbn}</span>
+                    )}
+                  </div>
                   <span className="item-price" style={{ color: 'var(--primary)' }}>{item.priceDisplay}</span>
 
                   {!item.stockSufficient && (
@@ -948,7 +959,7 @@ function CartPage() {
                       </button>
                     </div>
                   ) : (
-                    <div style={{ animation: 'fadeIn 0.2s ease', backgroundColor: '#fcfcfc', padding: '16px', borderRadius: '8px', border: '1px solid var(--border)', marginBottom: '16px' }}>
+                    <div style={{ animation: 'fadeIn 0.2s ease', marginBottom: '16px' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
                         <h4 style={{ margin: 0, fontSize: '14px', fontWeight: '700', color: 'var(--text-main)' }}>Nhập địa chỉ nhận hàng mới</h4>
                         {savedAddresses.length > 0 && (

@@ -98,6 +98,7 @@ function BookDetail() {
             rating: detail.rating || 0,
             introduce: detail.introduce || '',
             stockQuantity: detail.stockQuantity || 0,
+            stockStatus: detail.stockStatus || '',
             otherVersions: detail.otherVersions || [],
           });
         } else {
@@ -640,7 +641,7 @@ function BookDetail() {
             </div>
             {book.stockQuantity <= 0 && (
               <div className="detail-stock-status" style={{ marginTop: '8px' }}>
-                <span className="stock-badge stock-empty">Tạm hết hàng</span>
+                <span className="stock-badge stock-empty">{book.stockStatus || 'Tạm hết hàng'}</span>
               </div>
             )}
           </div>
@@ -695,8 +696,8 @@ function BookDetail() {
                   </button>
                 </div>
                 
-                <span className={`stock-badge ${book.stockQuantity <= 5 ? 'stock-low' : 'stock-ok'}`} style={{ marginTop: '0', fontSize: '13px' }}>
-                  {book.stockQuantity <= 5 ? `Chỉ còn ${book.stockQuantity} cuốn` : `${book.stockQuantity} cuốn có sẵn`}
+                <span className={`stock-badge ${book.stockQuantity < 10 ? 'stock-low' : 'stock-ok'}`} style={{ marginTop: '0', fontSize: '13px' }}>
+                  {book.stockStatus || (book.stockQuantity < 10 ? `Chỉ còn ${book.stockQuantity} cuốn` : 'Còn hàng')}
                 </span>
               </div>
               {quantity > book.stockQuantity && (
@@ -1229,7 +1230,7 @@ function BookDetail() {
         </div>
         <div className="detail-tab-content">
           {activeTab === 'intro' ? (
-            <div className="detail-bottom-intro"><div className="detail-long-desc">{book.introduce ? <p>{book.introduce}</p> : <p>{book.desc}</p>}</div></div>
+            <div className="detail-bottom-intro"><div className="detail-long-desc">{book.introduce ? <p style={{ whiteSpace: 'pre-wrap' }}>{book.introduce}</p> : <p style={{ whiteSpace: 'pre-wrap' }}>{book.desc}</p>}</div></div>
           ) : (
             <div className="detail-bottom-specs">
               <table className="specs-table-full">

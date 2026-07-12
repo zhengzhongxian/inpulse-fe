@@ -11,6 +11,9 @@ export interface CartItemResponse {
   quantity: number;
   stockQuantity: number;
   stockSufficient: boolean;
+  editionNumber?: number;
+  coverType?: string;
+  isbn?: string;
 }
 
 export const addToCartApi = (editionId: string, quantity: number = 1) => {

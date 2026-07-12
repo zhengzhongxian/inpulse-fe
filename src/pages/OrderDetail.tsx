@@ -354,6 +354,17 @@ function OrderDetail() {
                       <div>
                         <div className="order-detail-book-title" style={{ fontSize: '16px' }}>{item.bookTitle}</div>
                         <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>{item.authorName}</div>
+                        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginTop: '4px', fontSize: '12px', color: 'var(--text-muted)' }}>
+                          {item.editionNumber !== undefined && (
+                            <span>Phiên bản: #{item.editionNumber}</span>
+                          )}
+                          {item.coverType && (
+                            <span>Loại bìa: {item.coverType === 'HARD_COVER' ? 'Bìa cứng' : item.coverType === 'SOFT_COVER' ? 'Bìa mềm' : 'Đặc biệt'}</span>
+                          )}
+                          {item.isbn && (
+                            <span>ISBN: {item.isbn}</span>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </td>
