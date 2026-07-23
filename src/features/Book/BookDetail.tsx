@@ -6,8 +6,9 @@ import { useSeo } from '../../hooks/useSeo';
 import { ROUTES } from '../../config/routes';
 import { authClient, getUserProfileApi } from '../../api/auth';
 import { getProvincesApi, getDistrictsApi, getWardsApi } from '../../api/address';
-import { calculateShippingFeeApi, createOrderApi, getOrderDetailApi, mockPaymentApi } from '../../api/order';
+import { calculateShippingFeeApi, createOrderApi, getOrderDetailApi } from '../../api/order';
 import { addToCartApi } from '../../api/cart';
+import { checkVoucherEligibilityApi } from '../../api/vouchers';
 import { getBookCoverSvg } from '../../utils/bookHelper';
 import type { BookEditionResponse } from '../../api/books';
 import './BookDetail.css';
@@ -56,6 +57,10 @@ function BookDetail() {
         if (data && data.success && data.data) {
           const detail = data.data;
 
+          // Read flash sale flags directly from backend
+          const isFlashSaleActive = detail.isFlashSale || false;
+          const flashSaleItemId = detail.flashSaleItemId || undefined;
+
           // Update URL with editionId for sharing
           if (!editionId) {
             const url = new URL(window.location.href);
@@ -71,7 +76,9 @@ function BookDetail() {
             price: detail.priceDisplay,
             wasPrice: detail.oldPriceDisplay || undefined,
             priceRaw: detail.price,
-            wasPriceRaw: detail.oldPrice,
+            wasPriceRaw: detail.oldPrice || detail.price,
+            isFlashSale: isFlashSaleActive,
+            flashSaleItemId: flashSaleItemId,
             tag: detail.badgeText || '',
             tagClass: detail.badgeText ? detail.badgeText.toLowerCase() : '',
             badgeTextColor: detail.badgeTextColor || undefined,
@@ -188,6 +195,17 @@ function BookDetail() {
   const [showAddressDropdown, setShowAddressDropdown] = useState<boolean>(false);
   const addressDropdownRef = useRef<HTMLDivElement>(null);
 
+  // Voucher states
+  const [myUnusedVouchers, setMyUnusedVouchers] = useState<any[]>([]);
+  const [selectedVoucher, setSelectedVoucher] = useState<any | null>(null);
+  const [showVoucherSelector, setShowVoucherSelector] = useState<boolean>(false);
+  const [manualVoucherCode, setManualVoucherCode] = useState<string>('');
+  const [tempSelectedVoucher, setTempSelectedVoucher] = useState<any | null>(null);
+  const [modalPage, setModalPage] = useState<number>(1);
+  const modalPageSize = 3;
+
+  const voucherDropdownRef = useRef<HTMLDivElement>(null);
+
   // Shipping & Billing
   const [shippingFee, setShippingFee] = useState<number | null>(null);
   const [isCalculatingFee, setIsCalculatingFee] = useState<boolean>(false);
@@ -215,6 +233,40 @@ function BookDetail() {
   const [currentSlide, setCurrentSlide] = useState<number>(0);
   const [activeTab, setActiveTab] = useState<'intro' | 'specs'>('intro');
 
+  // Load checkout-eligible vouchers from Backend API
+  useEffect(() => {
+    if (isBuying && user && book) {
+      const fetchEligibleVouchers = async () => {
+        try {
+          const res = await checkVoucherEligibilityApi([{
+            editionId: book.id,
+            quantity
+          }]);
+          if (res.data && res.data.success) {
+            setMyUnusedVouchers(res.data.data || []);
+          }
+        } catch (err) {
+          console.error('Lỗi khi tải danh sách voucher khả dụng:', err);
+        }
+      };
+      fetchEligibleVouchers();
+    } else {
+      setMyUnusedVouchers([]);
+    }
+  }, [isBuying, quantity, book, user]);
+
+  // Sync selected voucher eligibility when list updates
+  useEffect(() => {
+    if (selectedVoucher && myUnusedVouchers.length > 0) {
+      const current = myUnusedVouchers.find(uv => uv.userVoucherId === selectedVoucher.userVoucherId);
+      if (!current || !current.eligible) {
+        setSelectedVoucher(null); // deselect if no longer eligible
+      } else {
+        setSelectedVoucher(current); // update calculated discount
+      }
+    }
+  }, [myUnusedVouchers]);
+
   // Click outside select dropdowns
   useEffect(() => {
     const handleOutsideClick = (e: MouseEvent) => {
@@ -230,10 +282,38 @@ function BookDetail() {
       if (addressDropdownRef.current && !addressDropdownRef.current.contains(e.target as Node)) {
         setShowAddressDropdown(false);
       }
+      if (voucherDropdownRef.current && !voucherDropdownRef.current.contains(e.target as Node)) {
+        setShowVoucherSelector(false);
+      }
     };
     document.addEventListener('mousedown', handleOutsideClick);
     return () => document.removeEventListener('mousedown', handleOutsideClick);
   }, []);
+
+  const getVoucherDiscountAmount = () => {
+    if (!selectedVoucher) return 0;
+    return selectedVoucher.calculatedDiscount || 0;
+  };
+
+  const handleApplyManualVoucher = () => {
+    if (!manualVoucherCode.trim()) {
+      toast.warning('Vui lòng nhập mã giảm giá.');
+      return;
+    }
+    const targetCode = manualVoucherCode.trim().toUpperCase();
+    const found = myUnusedVouchers.find(uv => uv.voucher.voucherCode.toUpperCase() === targetCode);
+    if (!found) {
+      toast.error('Mã giảm giá không hợp lệ hoặc không thuộc về ví của bạn.');
+      return;
+    }
+    if (!found.eligible) {
+      toast.error(found.reason || 'Đơn hàng của bạn chưa đủ điều kiện áp dụng mã giảm giá này.');
+      return;
+    }
+    setSelectedVoucher(found);
+    toast.success(`Đã áp dụng mã giảm giá [${found.voucher.voucherCode}] thành công!`);
+    setManualVoucherCode('');
+  };
 
   // Load profiles and addresses
   useEffect(() => {
@@ -328,7 +408,10 @@ function BookDetail() {
           const res = await calculateShippingFeeApi({
             toDistrictId: selectedDistrictId,
             toWardCode: selectedWardCode,
-            items: [{ editionId: book.id, quantity }]
+            items: [{ 
+              editionId: book.id, 
+              quantity 
+            }]
           });
           if (res.data?.success) {
             setShippingFee(res.data.data.total);
@@ -353,7 +436,10 @@ function BookDetail() {
           const payload = {
             toDistrictId: addr.districtId,
             toWardCode: addr.wardCode,
-            items: [{ editionId: book.id, quantity }]
+            items: [{ 
+              editionId: book.id, 
+              quantity 
+            }]
           };
           console.log('calculateFee sending API request with payload:', payload);
           const res = await calculateShippingFeeApi(payload);
@@ -385,7 +471,12 @@ function BookDetail() {
 
     const payload: any = {
       paymentMethod,
-      items: [{ editionId: book.id, quantity }]
+      items: [{ 
+        editionId: book.id, 
+        quantity,
+        flashSaleItemId: book.isFlashSale ? book.flashSaleItemId : undefined
+      }],
+      voucherCode: selectedVoucher ? selectedVoucher.voucher.voucherCode : undefined
     };
 
     if (useNewAddress) {
@@ -469,9 +560,10 @@ function BookDetail() {
   // PayOS Expiration Timer
   useEffect(() => {
     if (orderResult?.expiredAt) {
+      const expiredAt = orderResult.expiredAt;
       const calculateTimeLeft = () => {
         const now = Math.floor(Date.now() / 1000);
-        const difference = orderResult.expiredAt - now;
+        const difference = expiredAt - now;
         return difference > 0 ? difference : 0;
       };
 
@@ -506,6 +598,10 @@ function BookDetail() {
     setNewStreet('');
     setNewPhone('');
     setNewLabel('Nhà riêng');
+    setSelectedVoucher(null);
+    setShowVoucherSelector(false);
+    setManualVoucherCode('');
+    setTempSelectedVoucher(null);
   };
 
   const calcDiscountPercent = () => {
@@ -629,7 +725,9 @@ function BookDetail() {
           {book.description && <p className="detail-desc">{book.description}</p>}
 
           <div className="detail-price-box">
-            <span className="detail-price-label">Giá bán chính thức</span>
+            <span className="detail-price-label">
+              {book.isFlashSale ? 'Giá Flash Sale' : 'Giá bán chính thức'}
+            </span>
             <div className="detail-price-row-wrapper">
               <span className="detail-price-now">{book.price}</span>
               {book.wasPrice && (
@@ -712,7 +810,14 @@ function BookDetail() {
                 <>
                   <button 
                     className="btn-primary btn-detail-buy" 
-                    onClick={() => setIsBuying(true)}
+                    onClick={() => {
+                      if (!user) {
+                        toast.warning('Bạn cần đăng nhập để thực hiện mua hàng.');
+                        navigate(ROUTES.LOGIN);
+                        return;
+                      }
+                      setIsBuying(true);
+                    }}
                     disabled={isAddingToCart || quantity > book.stockQuantity}
                   >
                     Mua Ngay
@@ -1030,12 +1135,248 @@ function BookDetail() {
                 </div>
               </div>
 
+              {/* Voucher Selection */}
+              <div style={{ marginTop: '24px' }} ref={voucherDropdownRef}>
+                <h3 className="checkout-subtitle">Mã giảm giá (Voucher)</h3>
+                <div className="voucher-input-group">
+                  <input
+                    type="text"
+                    className="voucher-text-input"
+                    placeholder="Nhập mã giảm giá..."
+                    value={manualVoucherCode}
+                    onChange={(e) => setManualVoucherCode(e.target.value)}
+                  />
+                  <button
+                    type="button"
+                    className="btn-apply-code"
+                    onClick={handleApplyManualVoucher}
+                  >
+                    Áp dụng
+                  </button>
+                </div>
+                
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
+                  <button
+                    type="button"
+                    className="voucher-select-link-btn"
+                    onClick={() => {
+                      setTempSelectedVoucher(selectedVoucher);
+                      setModalPage(1);
+                      setShowVoucherSelector(true);
+                    }}
+                  >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/>
+                      <path d="M13 5v14"/>
+                    </svg>
+                    {selectedVoucher ? 'Thay đổi voucher' : 'Chọn mã giảm giá từ ví của bạn'}
+                  </button>
+                  {selectedVoucher && (
+                    <button
+                      type="button"
+                      className="btn-remove-voucher"
+                      onClick={() => setSelectedVoucher(null)}
+                    >
+                      Bỏ áp dụng
+                    </button>
+                  )}
+                </div>
+
+                {selectedVoucher && (
+                  <div style={{
+                    marginTop: '12px',
+                    padding: '12px',
+                    backgroundColor: '#fdf2f8',
+                    border: '1px solid #fbcfe8',
+                    borderRadius: '4px',
+                    fontSize: '13.5px',
+                    textAlign: 'left'
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                      <span style={{ color: 'var(--primary)', fontWeight: '700' }}>
+                        [{selectedVoucher.voucher.voucherCode}] - {selectedVoucher.voucher.description}
+                      </span>
+                    </div>
+                    <div style={{ color: 'var(--text-muted)', fontSize: '12px' }}>
+                      Đơn tối thiểu: {parseFloat(selectedVoucher.voucher.minOrderValue).toLocaleString('vi-VN')}đ
+                    </div>
+                  </div>
+                )}
+
+                {/* Voucher Selection Modal */}
+                {showVoucherSelector && (
+                  <div className="modal-backdrop-custom" onClick={() => setShowVoucherSelector(false)}>
+                    <div
+                      className="modal-content-custom checkout-voucher-modal"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid #edf2f7', paddingBottom: '12px' }}>
+                        <h3 style={{ fontSize: '18px', fontWeight: '800', color: 'var(--primary)', margin: 0 }}>
+                          Chọn Voucher
+                        </h3>
+                      </div>
+
+                      <div className="modal-voucher-list">
+                        {myUnusedVouchers.length === 0 ? (
+                          <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--text-muted)' }}>
+                            Bạn không có mã giảm giá nào khả dụng trong ví.
+                          </div>
+                        ) : (
+                          (() => {
+                            const startIndex = (modalPage - 1) * modalPageSize;
+                            const visibleVouchers = myUnusedVouchers.slice(startIndex, startIndex + modalPageSize);
+                            
+                            return visibleVouchers.map((item) => {
+                              const v = item.voucher;
+                              const isPercentage = v.discountType === 'PERCENTAGE';
+                              const discountDisplay = isPercentage ? `${v.discountValue}%` : `${Number(v.discountValue).toLocaleString('vi-VN')}đ`;
+                              const isSelected = tempSelectedVoucher?.userVoucherId === item.userVoucherId;
+
+                              const targetLabels: Record<string, string> = {
+                                ALL: 'Toàn bộ đơn hàng',
+                                SHIPPING: 'Miễn phí vận chuyển',
+                                BOOK: 'Sách chỉ định',
+                                CATEGORY: 'Danh mục',
+                                EDITION: 'Phiên bản'
+                              };
+
+                              return (
+                                <div
+                                  key={item.userVoucherId}
+                                  className={`customer-voucher-card modal-voucher-card ${isSelected ? 'selected-card' : ''} ${!item.eligible ? 'ineligible-card' : ''}`}
+                                  onClick={() => {
+                                    if (item.eligible) {
+                                      setTempSelectedVoucher(isSelected ? null : item);
+                                    } else {
+                                      toast.warning(`Không đủ điều kiện: ${item.reason || 'Voucher không khả dụng'}`);
+                                    }
+                                  }}
+                                >
+                                  <div className="voucher-card-left">
+                                    <div className="voucher-icon-circle">
+                                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/>
+                                        <path d="M13 5v14"/>
+                                      </svg>
+                                    </div>
+                                    <span className="voucher-discount-tag" style={{ fontSize: '15px', fontWeight: 900 }}>
+                                      {discountDisplay}
+                                    </span>
+                                  </div>
+                                  <div className="voucher-card-right" style={{ textAlign: 'left' }}>
+                                    <div className="voucher-header-info" style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+                                      <span className="voucher-code-badge" style={{ backgroundColor: isSelected ? 'var(--primary-light)' : '#f3f4f6', marginRight: '8px' }}>
+                                        {v.voucherCode}
+                                      </span>
+                                      {item.eligible ? (
+                                        <span style={{ fontSize: '10px', color: '#16a34a', backgroundColor: '#f0fdf4', padding: '2px 8px', borderRadius: '12px', fontWeight: 700 }}>
+                                          Khả dụng
+                                        </span>
+                                      ) : (
+                                        <span style={{ fontSize: '10px', color: '#dc2626', backgroundColor: '#fef2f2', padding: '2px 8px', borderRadius: '12px', fontWeight: 700 }}>
+                                          K.Hợp lệ
+                                        </span>
+                                      )}
+                                      {item.eligible && (
+                                        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center' }}>
+                                          <label className="voucher-radio-container" style={{ margin: 0 }}>
+                                            <input
+                                              type="radio"
+                                              className="voucher-radio-input"
+                                              checked={isSelected}
+                                              readOnly
+                                            />
+                                            <span className="voucher-radio-circle"></span>
+                                          </label>
+                                        </div>
+                                      )}
+                                    </div>
+                                    <p className="voucher-description" style={{ fontSize: '11.5px', marginBottom: '4px' }}>
+                                      {v.description}
+                                    </p>
+                                    <div style={{ fontSize: '10.5px', color: 'var(--text-light)' }}>
+                                      <p style={{ margin: '0' }}>Đơn tối thiểu: {parseFloat(v.minOrderValue).toLocaleString('vi-VN')}đ | Loại: {targetLabels[v.targetType] || v.targetType}</p>
+                                      {!item.eligible && item.reason && (
+                                        <p className="voucher-ineligible-reason">
+                                          Lý do: {item.reason}
+                                        </p>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            });
+                          })()
+                        )}
+                      </div>
+
+                      {/* Modal Pagination */}
+                      {myUnusedVouchers.length > modalPageSize && (
+                        <div className="modal-pagination">
+                          <button
+                            type="button"
+                            className="modal-pagination-btn"
+                            disabled={modalPage === 1}
+                            onClick={() => setModalPage(p => Math.max(1, p - 1))}
+                          >
+                            Trước
+                          </button>
+                          <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
+                            Trang {modalPage} / {Math.ceil(myUnusedVouchers.length / modalPageSize)}
+                          </span>
+                          <button
+                            type="button"
+                            className="modal-pagination-btn"
+                            disabled={modalPage >= Math.ceil(myUnusedVouchers.length / modalPageSize)}
+                            onClick={() => setModalPage(p => Math.min(Math.ceil(myUnusedVouchers.length / modalPageSize), p + 1))}
+                          >
+                            Sau
+                          </button>
+                        </div>
+                      )}
+
+                      {/* Modal Action buttons */}
+                      <div style={{ display: 'flex', gap: '12px', marginTop: '24px', justifyContent: 'flex-end' }}>
+                        <button
+                          type="button"
+                          className="btn-checkout-cancel"
+                          style={{ margin: 0, padding: '8px 16px', fontSize: '13.5px' }}
+                          onClick={() => setShowVoucherSelector(false)}
+                        >
+                          Đóng
+                        </button>
+                        <button
+                          type="button"
+                          className="btn-checkout-submit"
+                          style={{ margin: 0, padding: '8px 16px', fontSize: '13.5px' }}
+                          onClick={() => {
+                            setSelectedVoucher(tempSelectedVoucher);
+                            setShowVoucherSelector(false);
+                            if (tempSelectedVoucher) {
+                              toast.success(`Đã chọn mã giảm giá [${tempSelectedVoucher.voucher.voucherCode}]`);
+                            }
+                          }}
+                        >
+                          Xác nhận
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
               {/* Pricing breakdown summary */}
               <div className="checkout-summary-box">
                 <div className="summary-row">
                   <span>Tiền hàng ({quantity} cuốn)</span>
                   <span style={{ color: 'var(--primary)', fontWeight: '700' }}>{((book.priceRaw || 0) * quantity).toLocaleString('vi-VN')} VNĐ</span>
                 </div>
+                {selectedVoucher && (
+                  <div className="summary-row">
+                    <span>Mã giảm giá áp dụng</span>
+                    <span style={{ color: 'var(--primary)', fontWeight: '700' }}>-{getVoucherDiscountAmount().toLocaleString('vi-VN')} VNĐ</span>
+                  </div>
+                )}
                 <div className="summary-row">
                   <span>Phí vận chuyển (GHN)</span>
                   <span style={{ color: '#2563eb', fontWeight: '700' }}>
@@ -1054,8 +1395,8 @@ function BookDetail() {
                   <span>Tổng tiền thanh toán</span>
                   <span style={{ color: '#16a34a', fontSize: '18px', fontWeight: '800' }}>
                     {shippingFee !== null 
-                      ? `${((book.priceRaw || 0) * quantity + shippingFee).toLocaleString('vi-VN')} VNĐ`
-                      : `${((book.priceRaw || 0) * quantity).toLocaleString('vi-VN')} VNĐ`
+                      ? `${Math.max(0, (book.priceRaw || 0) * quantity + shippingFee - getVoucherDiscountAmount()).toLocaleString('vi-VN')} VNĐ`
+                      : `${Math.max(0, (book.priceRaw || 0) * quantity - getVoucherDiscountAmount()).toLocaleString('vi-VN')} VNĐ`
                     }
                   </span>
                 </div>

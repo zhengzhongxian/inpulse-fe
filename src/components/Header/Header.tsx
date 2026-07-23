@@ -146,6 +146,16 @@ function Header() {
         </div>
 
         <div className="nav-actions">
+          {/* Voucher icon */}
+          <div className="header-icon-wrap">
+            <Link to={ROUTES.VOUCHERS} className="header-icon-btn" title="Kho Voucher">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/>
+                <path d="M13 5v14"/>
+              </svg>
+            </Link>
+          </div>
+
           {/* Giỏ hàng icon */}
           <div className="header-icon-wrap">
             <Link to={ROUTES.CART} className="header-icon-btn">

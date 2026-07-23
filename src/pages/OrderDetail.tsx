@@ -6,11 +6,29 @@ import type { OrderDetailResponse } from '../api/order';
 import { useSeo } from '../hooks/useSeo';
 import './OrderDetail.css';
 
+const getNumericDiscount = (displayStr?: string) => {
+  if (!displayStr) return 0;
+  const num = parseInt(displayStr.replace(/[^\d]/g, ''), 10);
+  return isNaN(num) ? 0 : num;
+};
+
+const formatDateTime = (dateStr?: string) => {
+  if (!dateStr) return '';
+  const formatted = dateStr.endsWith('Z') || dateStr.includes('+') ? dateStr : dateStr + 'Z';
+  return new Date(formatted).toLocaleString('vi-VN');
+};
+
 function OrderDetail() {
   const { orderId } = useParams<{ orderId: string }>();
   const navigate = useNavigate();
   const [selectedOrderDetail, setSelectedOrderDetail] = useState<OrderDetailResponse | null>(null);
   const [isLoadingOrderDetail, setIsLoadingOrderDetail] = useState<boolean>(true);
+
+  const totalFlashSaleDiscount = selectedOrderDetail?.items
+    ? selectedOrderDetail.items.reduce((sum: number, item: any) => {
+        return sum + getNumericDiscount(item.flashSaleDiscountAmountDisplay);
+      }, 0)
+    : 0;
 
   useSeo(
     'Chi tiết đơn hàng | InkPulse Bookstore',
@@ -74,7 +92,7 @@ function OrderDetail() {
           <h2 style={{ fontSize: '22px', fontWeight: '800', margin: 0, color: 'var(--primary)', fontFamily: "'Be Vietnam Pro', sans-serif" }}>
             Chi tiết đơn hàng: {selectedOrderDetail.orderCode}
           </h2>
-          <span style={{ fontSize: '14px', color: 'var(--text-main)' }}>Ngày đặt: {selectedOrderDetail.createdAt}</span>
+          <span style={{ fontSize: '14px', color: 'var(--text-main)' }}>Ngày đặt: {formatDateTime(selectedOrderDetail.createdAt)}</span>
         </div>
 
         {/* Visual Order Timeline Progress Bar */}
@@ -369,8 +387,52 @@ function OrderDetail() {
                     </div>
                   </td>
                   <td style={{ textAlign: 'center', fontWeight: '700', color: '#2563eb' }}>{item.quantity}</td>
-                  <td style={{ textAlign: 'right', fontWeight: '700', color: 'var(--primary)' }}>{item.priceDisplay}</td>
-                  <td style={{ textAlign: 'right', fontWeight: '700', color: 'var(--primary)', paddingRight: 0 }}>{item.subtotalDisplay}</td>
+                  <td style={{ textAlign: 'right', fontWeight: '700', color: 'var(--primary)' }}>
+                    {item.isFlashSale ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                        <span style={{ color: '#da447d' }}>
+                          {((getNumericDiscount(item.priceDisplay) * item.quantity - getNumericDiscount(item.flashSaleDiscountAmountDisplay)) / item.quantity).toLocaleString('vi-VN')}đ
+                        </span>
+                        <span style={{ fontSize: '11px', color: 'var(--text-light)', textDecoration: 'line-through', fontWeight: 'normal' }}>
+                          {item.oldPriceDisplay}
+                        </span>
+                      </div>
+                    ) : getNumericDiscount(item.oldPriceDisplay) > getNumericDiscount(item.priceDisplay) ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                        <span>
+                          {item.priceDisplay}
+                        </span>
+                        <span style={{ fontSize: '11px', color: 'var(--text-light)', textDecoration: 'line-through', fontWeight: 'normal' }}>
+                          {item.oldPriceDisplay}
+                        </span>
+                      </div>
+                    ) : (
+                      item.priceDisplay
+                    )}
+                  </td>
+                  <td style={{ textAlign: 'right', fontWeight: '700', color: 'var(--primary)', paddingRight: 0 }}>
+                    {item.isFlashSale ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                        <span style={{ color: '#da447d' }}>
+                          {(getNumericDiscount(item.subtotalDisplay) - getNumericDiscount(item.flashSaleDiscountAmountDisplay)).toLocaleString('vi-VN')}đ
+                        </span>
+                        <span style={{ fontSize: '11px', color: 'var(--text-light)', textDecoration: 'line-through', fontWeight: 'normal' }}>
+                          {(getNumericDiscount(item.oldPriceDisplay) * item.quantity).toLocaleString('vi-VN')}đ
+                        </span>
+                      </div>
+                    ) : getNumericDiscount(item.oldPriceDisplay) > getNumericDiscount(item.priceDisplay) ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                        <span>
+                          {item.subtotalDisplay}
+                        </span>
+                        <span style={{ fontSize: '11px', color: 'var(--text-light)', textDecoration: 'line-through', fontWeight: 'normal' }}>
+                          {(getNumericDiscount(item.oldPriceDisplay) * item.quantity).toLocaleString('vi-VN')}đ
+                        </span>
+                      </div>
+                    ) : (
+                      item.subtotalDisplay
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -387,6 +449,18 @@ function OrderDetail() {
             <span>Phí vận chuyển:</span>
             <strong style={{ color: '#2563eb' }}>{selectedOrderDetail.shippingFeeDisplay}</strong>
           </div>
+          {totalFlashSaleDiscount > 0 && (
+            <div className="order-detail-row" style={{ width: '280px', color: '#da447d' }}>
+              <span>Giảm giá Flash Sale:</span>
+              <strong>-{totalFlashSaleDiscount.toLocaleString('vi-VN')}đ</strong>
+            </div>
+          )}
+          {selectedOrderDetail.voucherCode && (
+            <div className="order-detail-row" style={{ width: '280px', color: '#e11d48' }}>
+              <span>Giảm giá ({selectedOrderDetail.voucherCode}):</span>
+              <strong>-{selectedOrderDetail.voucherDiscountAmountDisplay}</strong>
+            </div>
+          )}
           <div className="order-detail-row total" style={{ width: '280px', borderTop: '1.5px solid var(--border)', paddingTop: '12px', marginTop: '6px' }}>
             <span>Tổng tiền thanh toán:</span>
             <strong style={{ color: '#16a34a', fontSize: '18px' }}>{selectedOrderDetail.totalDisplay}</strong>

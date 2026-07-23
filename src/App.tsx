@@ -3,6 +3,7 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Header from './components/Header/Header';
 import Footer from './components/Footer/Footer';
+import AIChatbox from './components/AIChatbox/AIChatbox';
 import BookModal from './features/Book/BookModal/BookModal';
 import DevSandbox from './components/DevSandbox/DevSandbox';
 import Home from './pages/Home';
@@ -17,6 +18,7 @@ import RegisterGoogle from './pages/RegisterGoogle';
 import Cart from './pages/Cart';
 import CheckoutResult from './pages/CheckoutResult';
 import OrderDetail from './pages/OrderDetail';
+import Vouchers from './pages/Vouchers';
 import { NavigationProvider, useNavigation } from './context/NavigationContext';
 import { AuthProvider } from './context/AuthContext';
 import { LoginProvider } from './context/LoginContext';
@@ -46,6 +48,7 @@ function AppContent() {
           <Route path={ROUTES.REGISTER_GOOGLE} element={<RegisterGoogle />} />
           <Route path={ROUTES.CART} element={<Cart />} />
           <Route path={ROUTES.CHECKOUT_RESULT} element={<CheckoutResult />} />
+          <Route path={ROUTES.VOUCHERS} element={<Vouchers />} />
           <Route path="*" element={<Navigate to={ROUTES.HOME} replace />} />
         </Routes>
       </main>
@@ -53,6 +56,8 @@ function AppContent() {
       <DevSandbox />
 
       <Footer />
+
+      <AIChatbox />
 
       {/* Book details Modal Popup */}
       {selectedBook && (

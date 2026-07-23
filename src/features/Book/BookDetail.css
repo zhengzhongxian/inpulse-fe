@@ -217,7 +217,7 @@
   padding: 12px 32px;
   font-size: 15px;
   font-weight: 700;
-  border-radius: 8px;
+  border-radius: 4px;
   cursor: pointer;
   background-color: var(--primary);
   color: #FFFFFF;
@@ -233,7 +233,7 @@
 .btn-detail-cart {
   width: 46px;
   height: 46px;
-  border-radius: 8px;
+  border-radius: 4px;
   border: 1.5px solid var(--primary);
   display: flex;
   align-items: center;

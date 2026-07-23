@@ -582,3 +582,158 @@
   color: #ef4444 !important;
   background-color: rgba(239, 68, 68, 0.08) !important;
 }
+
+/* Voucher Checkout Section Styling */
+.voucher-input-group {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.voucher-input-group .voucher-text-input {
+  flex: 1;
+  height: 42px;
+  padding: 8px 14px;
+  border: 1px solid var(--border-dark);
+  border-radius: 6px;
+  font-size: 13.5px;
+  background-color: #ffffff;
+  color: var(--text-main);
+  outline: none;
+  box-sizing: border-box;
+}
+
+.voucher-input-group .voucher-text-input:focus {
+  border-color: var(--primary);
+}
+
+.voucher-input-group .btn-apply-code {
+  height: 42px;
+  padding: 0 18px;
+  background-color: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 13.5px;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+  white-space: nowrap;
+}
+
+.voucher-input-group .btn-apply-code:hover {
+  opacity: 0.9;
+}
+
+.voucher-select-link-btn {
+  background: none;
+  border: none;
+  color: var(--primary);
+  font-weight: 700;
+  cursor: pointer;
+  font-size: 13.5px;
+  padding: 0;
+  text-align: left;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: opacity 0.2s ease;
+}
+
+.voucher-select-link-btn:hover {
+  opacity: 0.8;
+}
+
+/* Modal layout overrides */
+.checkout-voucher-modal {
+  max-width: 500px !important;
+  width: 95% !important;
+  background-color: #ffffff !important;
+  color: var(--text-main) !important;
+  border: none !important;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15) !important;
+}
+
+.modal-voucher-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 380px;
+  overflow-y: auto;
+  padding-right: 4px;
+  margin-bottom: 20px;
+}
+
+.modal-voucher-card {
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.modal-voucher-card:hover {
+  transform: none !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04) !important;
+}
+
+.modal-voucher-card.selected-card {
+  border: 1px solid var(--border) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04) !important;
+}
+
+.modal-voucher-card.ineligible-card {
+  opacity: 0.65;
+  cursor: not-allowed !important;
+}
+
+.modal-voucher-card.ineligible-card .voucher-card-left {
+  background: #f3f4f6 !important;
+}
+
+.voucher-ineligible-reason {
+  color: #dc2626;
+  font-size: 11px;
+  font-weight: 600;
+  margin-top: 4px;
+}
+
+.modal-pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  margin-top: 16px;
+  border-top: 1px solid #f1f5f9;
+  padding-top: 12px;
+}
+
+.modal-pagination-btn {
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  background: transparent;
+  border-radius: 4px;
+  font-size: 12.5px;
+  cursor: pointer;
+  color: var(--text-main);
+}
+
+.modal-pagination-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btn-remove-voucher {
+  background: none;
+  border: none;
+  color: #ef4444;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.btn-remove-voucher:hover {
+  background-color: rgba(239, 68, 68, 0.08);
+  color: #dc2626;
+}
+

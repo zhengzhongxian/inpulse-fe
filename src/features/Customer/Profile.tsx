@@ -15,6 +15,12 @@ import { getProvincesApi, getDistrictsApi, getWardsApi } from '../../api/address
 import { getMyOrdersApi } from '../../api/order';
 import './Profile.css';
 
+const formatDateTime = (dateStr?: string) => {
+  if (!dateStr) return '';
+  const formatted = dateStr.endsWith('Z') || dateStr.includes('+') ? dateStr : dateStr + 'Z';
+  return new Date(formatted).toLocaleString('vi-VN');
+};
+
 function Profile() {
   const {
     user,
@@ -116,6 +122,7 @@ function Profile() {
   // Fetch initial profile and GHN provinces
   useEffect(() => {
     const initData = async () => {
+      if (!user) return;
       try {
         const profileRes = await getUserProfileApi();
         const data = profileRes.data.data;
@@ -144,7 +151,7 @@ function Profile() {
       }
     };
     initData();
-  }, []);
+  }, [user]);
 
   const fetchOrders = async (targetPage: number) => {
     setIsLoadingOrders(true);
@@ -1382,7 +1389,7 @@ function Profile() {
                     <div className="order-card-header">
                       <div>
                         <span className="order-code-title">Mã đơn hàng: {order.orderCode}</span>
-                        <div className="order-date-text">Ngày đặt: {order.createdAt}</div>
+                        <div className="order-date-text">Ngày đặt: {formatDateTime(order.createdAt)}</div>
                       </div>
                       <div style={{ display: 'flex', gap: '4px' }}>
                         <span className={`status-badge ${order.orderStatus.toLowerCase()}`}>
@@ -1803,6 +1810,7 @@ function Profile() {
           </div>
         </div>
       )}
+
 
 
     </div>

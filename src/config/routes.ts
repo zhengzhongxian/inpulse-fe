@@ -11,6 +11,7 @@ export const ROUTES = {
   REGISTER_GOOGLE: '/register-google',
   CART: '/cart',
   CHECKOUT_RESULT: '/checkout/result',
+  VOUCHERS: '/vouchers',
 } as const;
 
 export const buildBookDetailPath = (id: string) => `/book/${id}`;

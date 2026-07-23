@@ -14,6 +14,8 @@ export interface CartItemResponse {
   editionNumber?: number;
   coverType?: string;
   isbn?: string;
+  isFlashSale?: boolean;
+  flashSaleItemId?: string;
 }
 
 export const addToCartApi = (editionId: string, quantity: number = 1) => {

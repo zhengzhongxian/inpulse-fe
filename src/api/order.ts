@@ -29,6 +29,7 @@ export interface CreateOrderRequest {
   receiverName?: string;
   addressLabel?: string;
   cartItemIds?: string[];
+  voucherCode?: string;
 }
 
 export interface CreateOrderResponse {
@@ -64,6 +65,9 @@ export interface OrderItemDetailResponse {
   quantity: number;
   priceDisplay: string;
   subtotalDisplay: string;
+  isFlashSale?: boolean;
+  flashSaleDiscountAmountDisplay?: string;
+  flashSaleItemId?: string;
 }
 
 export interface OrderDetailResponse {
@@ -83,6 +87,8 @@ export interface OrderDetailResponse {
   totalDisplay: string;
   items: OrderItemDetailResponse[];
   createdAt: string;
+  voucherCode?: string;
+  voucherDiscountAmountDisplay?: string;
 }
 
 export const calculateShippingFeeApi = (data: CalculateShippingFeeRequest) => {
