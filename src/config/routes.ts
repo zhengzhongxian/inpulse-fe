@@ -12,6 +12,10 @@ export const ROUTES = {
   CART: '/cart',
   CHECKOUT_RESULT: '/checkout/result',
   VOUCHERS: '/vouchers',
+  ABOUT: '/about',
+  ARCHITECTURE: '/architecture',
+  SHIPPING_POLICY: '/shipping-policy',
+  TERMS_PRIVACY: '/terms-privacy',
 } as const;
 
 export const buildBookDetailPath = (id: string) => `/book/${id}`;

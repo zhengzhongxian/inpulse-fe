@@ -19,6 +19,10 @@ import Cart from './pages/Cart';
 import CheckoutResult from './pages/CheckoutResult';
 import OrderDetail from './pages/OrderDetail';
 import Vouchers from './pages/Vouchers';
+import AboutUs from './pages/AboutUs';
+import ArchitecturePage from './pages/ArchitecturePage';
+import ShippingPolicy from './pages/ShippingPolicy';
+import TermsPrivacy from './pages/TermsPrivacy';
 import { NavigationProvider, useNavigation } from './context/NavigationContext';
 import { AuthProvider } from './context/AuthContext';
 import { LoginProvider } from './context/LoginContext';
@@ -35,6 +39,8 @@ function AppContent() {
 
       {/* Main Content Router */}
       <main style={{ flexGrow: 1 }}>
+
+
         <Routes>
           <Route path={ROUTES.HOME} element={<Home />} />
           <Route path={ROUTES.BOOK_DETAIL} element={<BookDetail />} />
@@ -49,9 +55,14 @@ function AppContent() {
           <Route path={ROUTES.CART} element={<Cart />} />
           <Route path={ROUTES.CHECKOUT_RESULT} element={<CheckoutResult />} />
           <Route path={ROUTES.VOUCHERS} element={<Vouchers />} />
+          <Route path={ROUTES.ABOUT} element={<AboutUs />} />
+          <Route path={ROUTES.ARCHITECTURE} element={<ArchitecturePage />} />
+          <Route path={ROUTES.SHIPPING_POLICY} element={<ShippingPolicy />} />
+          <Route path={ROUTES.TERMS_PRIVACY} element={<TermsPrivacy />} />
           <Route path="*" element={<Navigate to={ROUTES.HOME} replace />} />
         </Routes>
       </main>
+
 
       <DevSandbox />
 

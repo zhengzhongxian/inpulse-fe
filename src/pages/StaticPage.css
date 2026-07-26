@@ -1,0 +1,442 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600;1,700&display=swap');
+
+/* Full Bleed Layout System */
+.about-fullbleed-wrapper {
+  width: 100%;
+  overflow-x: hidden;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  color: #0f172a;
+  margin-bottom: 80px;
+}
+
+/* Scroll Reveal Animations */
+.reveal-element {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.75s cubic-bezier(0.16, 1, 0.3, 1), transform 0.75s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+
+.reveal-element.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.delay-1 { transition-delay: 0.12s; }
+.delay-2 { transition-delay: 0.24s; }
+.delay-3 { transition-delay: 0.36s; }
+
+/* Section 1: Hero Band */
+.band-hero {
+  background: linear-gradient(180deg, #fff5f8 0%, #ffffff 100%);
+  padding: 64px 24px 56px 24px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.band-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.hero-pill-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #ffffff;
+  color: #da447d;
+  font-size: 13px;
+  font-weight: 800;
+  padding: 6px 16px;
+  border-radius: 4px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 20px;
+  border: 1px solid rgba(218, 68, 125, 0.25);
+}
+
+.hero-main-title {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 36px;
+  font-weight: 800;
+  color: #0f172a;
+  margin-bottom: 18px;
+  line-height: 1.3;
+  letter-spacing: -0.5px;
+}
+
+.hero-main-title span {
+  color: #da447d;
+}
+
+.hero-sub-description {
+  font-size: 17.5px;
+  color: #475569;
+  max-width: 860px;
+  margin: 0 auto 36px auto;
+  line-height: 1.7;
+  font-weight: 500;
+}
+
+/* Enhanced Stats Counter Cards */
+.hero-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  max-width: 900px;
+  margin: 0 auto;
+  padding-top: 24px;
+}
+
+@media (max-width: 768px) {
+  .hero-stats-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.stat-item-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 24px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.stat-item-card:hover {
+  border-color: #da447d;
+  transform: translateY(-3px);
+}
+
+.stat-number {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 40px;
+  font-weight: 800;
+  color: #da447d;
+  line-height: 1.1;
+  margin-bottom: 6px;
+}
+
+.stat-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Section 2: Full Width Showcase Frame */
+.band-showcase {
+  padding: 48px 24px;
+  background: #ffffff;
+}
+
+.showcase-frame {
+  max-width: 1200px;
+  margin: 0 auto;
+  background: #0f172a;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid #1e293b;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px;
+}
+
+.showcase-img {
+  width: 100%;
+  height: auto;
+  max-height: 620px;
+  object-fit: contain;
+  border-radius: 4px;
+  display: block;
+}
+
+.showcase-caption {
+  padding: 12px 16px 4px 16px;
+  color: #cbd5e1;
+  font-size: 13.5px;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* Section 3: Deep Slate Dark Band (Biography) */
+.band-dark-bio {
+  background: #0f172a;
+  color: #f8fafc;
+  padding: 80px 24px;
+  border-top: 3px solid #da447d;
+  border-bottom: 1px solid #1e293b;
+}
+
+.dark-bio-grid {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 380px 1fr;
+  gap: 48px;
+  align-items: start;
+}
+
+@media (max-width: 960px) {
+  .dark-bio-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.dark-portrait-box {
+  background: #1e293b;
+  border-radius: 6px;
+  padding: 8px;
+  border: 1px solid #334155;
+}
+
+.dark-portrait-img {
+  width: 100%;
+  height: auto;
+  max-height: 480px;
+  object-fit: contain;
+  border-radius: 4px;
+  display: block;
+}
+
+.dark-portrait-caption {
+  padding: 12px 14px 4px 14px;
+  color: #94a3b8;
+  font-size: 13px;
+  text-align: center;
+  font-weight: 600;
+}
+
+.dark-bio-content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  font-size: 16.5px;
+  line-height: 1.8;
+  color: #cbd5e1;
+}
+
+.dark-bio-content h2 {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 34px;
+  font-weight: 800;
+  color: #ffffff;
+  margin-bottom: 10px;
+}
+
+.dark-bio-content p strong {
+  color: #f66398;
+}
+
+.dark-quote-banner {
+  background: rgba(218, 68, 125, 0.12);
+  border-left: 4px solid #da447d;
+  padding: 20px 24px;
+  border-radius: 0 4px 4px 0;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-style: italic;
+  font-size: 18px;
+  color: #ffffff;
+  line-height: 1.65;
+  margin: 8px 0;
+}
+
+/* Section 4: Zig-Zag Timeline Band */
+.band-zigzag {
+  padding: 80px 24px;
+  background: #ffffff;
+}
+
+.zigzag-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 72px;
+}
+
+.zigzag-header {
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.zigzag-header h2 {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 34px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.zigzag-item {
+  display: grid;
+  grid-template-columns: 440px 1fr;
+  gap: 48px;
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 32px;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.zigzag-item:hover {
+  border-color: #da447d;
+  transform: translateY(-3px);
+}
+
+.zigzag-item.reverse {
+  grid-template-columns: 1fr 440px;
+}
+
+@media (max-width: 960px) {
+  .zigzag-item, .zigzag-item.reverse {
+    grid-template-columns: 1fr;
+  }
+}
+
+.zigzag-media-frame {
+  background-color: #0f172a;
+  border-radius: 4px;
+  padding: 6px;
+}
+
+.zigzag-img {
+  width: 100%;
+  height: auto;
+  max-height: 460px;
+  object-fit: contain;
+  border-radius: 4px;
+  display: block;
+}
+
+.zigzag-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.zigzag-title {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 24px;
+  font-weight: 800;
+  color: #0f172a;
+  border-bottom: 2px solid #fff0f5;
+  padding-bottom: 8px;
+}
+
+.zigzag-paragraphs {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  font-size: 15.5px;
+  line-height: 1.75;
+  color: #334155;
+}
+
+.zigzag-paragraphs p strong {
+  color: #da447d;
+}
+
+/* Section 5: Core Values Cards Band */
+.band-values {
+  background: #f8fafc;
+  padding: 80px 24px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.values-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.values-title {
+  text-align: center;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 34px;
+  font-weight: 800;
+  color: #0f172a;
+  margin-bottom: 44px;
+}
+
+.core-values-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 28px;
+}
+
+.core-value-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: border-color 0.25s ease, transform 0.25s ease;
+  box-shadow: none;
+}
+
+.core-value-card:hover {
+  border-color: #da447d;
+  transform: translateY(-4px);
+}
+
+.core-value-img-wrap {
+  width: 100%;
+  height: 220px;
+  overflow: hidden;
+  position: relative;
+  background-color: #f8fafc;
+}
+
+.core-value-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.4s ease;
+}
+
+.core-value-card:hover .core-value-img {
+  transform: scale(1.06);
+}
+
+.value-tag-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  background: rgba(15, 23, 42, 0.85);
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 4px;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  backdrop-filter: blur(4px);
+}
+
+.core-value-body {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+}
+
+.core-value-card h3 {
+  font-size: 19px;
+  font-weight: 800;
+  color: #da447d;
+  margin: 0;
+}
+
+.core-value-card p {
+  font-size: 14.5px;
+  color: #475569;
+  line-height: 1.65;
+  margin: 0;
+}

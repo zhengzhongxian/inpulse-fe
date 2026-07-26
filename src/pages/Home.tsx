@@ -1,13 +1,17 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import BookCard from '../features/Book/BookCard/BookCard';
 import { getBooksApi } from '../api/books';
 import { getCategoriesApi } from '../api/categories';
 import FlashSaleSection from '../components/FlashSale/FlashSaleSection';
+import BannerSection from '../components/Banner/BannerSection';
 import { mapResponseToBook } from '../utils/bookHelper';
 import type { Book } from '../models/Book';
 import type { BookResponse } from '../api/books';
 import { useSeo } from '../hooks/useSeo';
+import { ROUTES } from '../config/routes';
 import './Home.css';
+
 
 function Home() {
   useSeo(
@@ -108,7 +112,7 @@ function Home() {
     <div>
       {/* Hero Features Block instead of standard Banner */}
       <section className="home-hero-features">
-        {/* Card 1: Programming */}
+        {/* Card 1: About InkPulse */}
         <div className="hero-feature-card">
           <div className="feature-icon-circle">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="white-icon">
@@ -117,11 +121,11 @@ function Home() {
             </svg>
           </div>
           <div className="feature-content">
-            <h3 className="feature-title">Sách Lập Trình</h3>
-            <p className="feature-desc">Kho tàng tri thức cao cấp và thực chiến</p>
+            <h3 className="feature-title">Về InkPulse</h3>
+            <p className="feature-desc">Hành trình sáng lập & tầm nhìn thương hiệu</p>
             <div className="feature-footer">
-              <span className="feature-meta">Hơn 500+ đầu sách</span>
-              <a href="#books-list" className="btn-feature-action">Xem ngay</a>
+              <span className="feature-meta">Giới thiệu chung</span>
+              <Link to={ROUTES.ABOUT} className="btn-feature-action">Xem ngay</Link>
             </div>
           </div>
         </div>
@@ -139,32 +143,13 @@ function Home() {
             <h3 className="feature-title">Thiết Kế Hệ Thống</h3>
             <p className="feature-desc">Kiến trúc phân tán, CQRS & Event Sourcing</p>
             <div className="feature-footer">
-              <span className="feature-meta">200+ tài liệu chuyên sâu</span>
-              <a href="#books-list" className="btn-feature-action">Khám phá</a>
+              <span className="feature-meta">Công nghệ cốt lõi</span>
+              <Link to={ROUTES.ARCHITECTURE} className="btn-feature-action">Khám phá</Link>
             </div>
           </div>
         </div>
 
-        {/* Card 3: Database */}
-        <div className="hero-feature-card">
-          <div className="feature-icon-circle">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="white-icon">
-              <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
-              <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
-              <path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3"></path>
-            </svg>
-          </div>
-          <div className="feature-content">
-            <h3 className="feature-title">Cơ Sở Dữ Liệu</h3>
-            <p className="feature-desc">Tối ưu SQL, NoSQL & Caching nâng cao</p>
-            <div className="feature-footer">
-              <span className="feature-meta">150+ sách thực chiến</span>
-              <a href="#books-list" className="btn-feature-action">Tìm hiểu</a>
-            </div>
-          </div>
-        </div>
-
-        {/* Card 4: Express Delivery */}
+        {/* Card 3: Shipping Policy */}
         <div className="hero-feature-card">
           <div className="feature-icon-circle">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="white-icon">
@@ -175,15 +160,33 @@ function Home() {
             </svg>
           </div>
           <div className="feature-content">
-            <h3 className="feature-title">Giao Nhanh 24H</h3>
-            <p className="feature-desc">Nhận sách nhanh chóng trong ngày</p>
+            <h3 className="feature-title">Giao Hàng & Đổi Trả</h3>
+            <p className="feature-desc">Vận chuyển 24h & kiểm hàng toàn quốc</p>
             <div className="feature-footer">
-              <span className="feature-meta">Ship COD toàn quốc</span>
-              <a href="#books-list" className="btn-feature-action">Mua ngay</a>
+              <span className="feature-meta">Chính sách dịch vụ</span>
+              <Link to={ROUTES.SHIPPING_POLICY} className="btn-feature-action">Tìm hiểu</Link>
+            </div>
+          </div>
+        </div>
+
+        {/* Card 4: Terms & Privacy */}
+        <div className="hero-feature-card">
+          <div className="feature-icon-circle">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="white-icon">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+            </svg>
+          </div>
+          <div className="feature-content">
+            <h3 className="feature-title">Điều Khoản & Bảo Mật</h3>
+            <p className="feature-desc">Bảo vệ thông tin & quyền lợi khách hàng</p>
+            <div className="feature-footer">
+              <span className="feature-meta">Cam kết chất lượng</span>
+              <Link to={ROUTES.TERMS_PRIVACY} className="btn-feature-action">Xem thêm</Link>
             </div>
           </div>
         </div>
       </section>
+
 
       <FlashSaleSection />
 
