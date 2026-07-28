@@ -1,4 +1,4 @@
-import api from './client';
+import { authClient } from './auth';
 
 export interface BannerEditionItem {
   editionId: string;
@@ -28,5 +28,5 @@ export interface BannerResponse {
 }
 
 export const getPublicBannersApi = async () => {
-  return await api.get('/v1/banners/public');
+  return await authClient.get('/banners/public');
 };

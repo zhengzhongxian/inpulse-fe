@@ -188,6 +188,8 @@ function Home() {
       </section>
 
 
+      <BannerSection />
+
       <FlashSaleSection />
 
       {/* Books catalog grid */}
