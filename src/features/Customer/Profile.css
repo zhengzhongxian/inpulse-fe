@@ -393,7 +393,8 @@ input:checked+.switch-slider:before {
 }
 
 .modal-content-custom {
-  background-color: #ffffff;
+  background-color: #ffffff !important;
+  color: var(--text-main, #111827);
   width: 100%;
   max-width: 600px;
   padding: 24px;

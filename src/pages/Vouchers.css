@@ -217,7 +217,7 @@
   backdrop-filter: blur(4px);
 }
 
-.modal-content-custom {
+.voucher-modal-content-custom {
   background-color: #111113;
   border: 1px solid var(--border);
   border-radius: 12px;

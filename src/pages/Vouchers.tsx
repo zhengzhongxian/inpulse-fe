@@ -661,7 +661,7 @@ export const Vouchers = () => {
       {showVoucherDetailModal && (
         <div className="modal-backdrop-custom" onClick={() => setShowVoucherDetailModal(false)}>
           <div
-            className="modal-content-custom"
+            className="voucher-modal-content-custom"
             onClick={(e) => e.stopPropagation()}
             style={{
               maxWidth: '480px',
