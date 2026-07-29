@@ -133,7 +133,7 @@ const AIChatbox: React.FC = () => {
         let errorText = 'Hiện tại máy chủ AI chưa bật server. Vui lòng liên hệ tổng thống trump để tài trợ server.';
         try {
           const errJson = await response.json();
-          if (errJson && errJson.message) {
+          if (errJson && errJson.message && !errJson.message.toLowerCase().includes('internal') && !errJson.message.toLowerCase().includes('sự cố')) {
             errorText = errJson.message;
           }
         } catch (_) {}
