@@ -86,6 +86,13 @@ const FlashSaleSection: React.FC = () => {
     navigate(`/book/${sale.bookEditionId}?editionId=${sale.bookEditionId}&flashSaleId=${sale.flashSaleItemId}`);
   };
 
+  const getFullImageUrl = (url?: string) => {
+    if (!url) return '';
+    if (url.startsWith('http://') || url.startsWith('https://')) return url;
+    const cleanUrl = url.startsWith('/') ? url : `/${url}`;
+    return `http://api.inkpulse.com${cleanUrl}`;
+  };
+
   return (
     <section className="flash-sale-home-section">
       <div className="flash-sale-header">
@@ -119,11 +126,25 @@ const FlashSaleSection: React.FC = () => {
           const discountPercent = (sale.originalPrice && sale.originalPrice > 0)
             ? Math.round(((sale.originalPrice - sale.flashSalePrice) / sale.originalPrice) * 100)
             : 0;
+          const imgUrl = getFullImageUrl(sale.thumbnailUrl);
           return (
             <div key={sale.flashSaleItemId} className={`flash-sale-card ${isUpcoming ? 'upcoming' : ''}`} onClick={() => handleBuyNow(sale)}>
               <div className="flash-sale-cover-wrap">
                 <span className="discount-tag">-{discountPercent}%</span>
-                <img src={sale.thumbnailUrl || '/book-placeholder.jpg'} alt={sale.bookTitle} className="flash-sale-cover" />
+                {imgUrl ? (
+                  <img
+                    src={imgUrl}
+                    alt={sale.bookTitle}
+                    className="flash-sale-cover"
+                    onError={(e) => {
+                      (e.target as HTMLElement).style.opacity = '0.3';
+                    }}
+                  />
+                ) : (
+                  <div className="flash-sale-cover-placeholder">
+                    <span>{sale.bookTitle}</span>
+                  </div>
+                )}
               </div>
               <div className="flash-sale-details">
                 <h3 className="flash-sale-book-title">{sale.bookTitle}</h3>
