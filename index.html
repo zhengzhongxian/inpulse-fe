@@ -11,12 +11,24 @@
     <meta name="robots" content="index, follow" />
     <meta name="google-site-verification" content="googleefc0f23e1169393b" />
 
+    <!-- Canonical Tag & Theme Color -->
+    <link rel="canonical" href="https://inkpulsebook.online/" />
+    <meta name="theme-color" content="#f484a8" />
+
     <!-- Open Graph cho Facebook, Zalo, LinkedIn -->
     <meta property="og:title" content="InkPulse | Nhà Sách Trực Tuyến - Trịnh Trung Hiển" />
-    <meta property="og:description" content="Nền tảng nhà sách trực tuyến InkPulse phát triển bởi Trịnh Trung Hiển." />
+    <meta property="og:description" content="InkPulse là nền tảng nhà sách trực tuyến hàng đầu sáng lập và phát triển bởi Trịnh Trung Hiển. Khám phá hàng ngàn đầu sách văn học, kinh tế, kỹ năng sống." />
     <meta property="og:url" content="https://inkpulsebook.online" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="InkPulse Bookstore" />
+    <meta property="og:locale" content="vi_VN" />
+
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@InkPulseBook" />
+    <meta name="twitter:creator" content="@TrinhTrungHien" />
+    <meta name="twitter:title" content="InkPulse | Nhà Sách Trực Tuyến - Trịnh Trung Hiển" />
+    <meta name="twitter:description" content="InkPulse là nền tảng nhà sách trực tuyến hàng đầu sáng lập bởi Trịnh Trung Hiển. Khám phá hàng ngàn đầu sách văn học, kinh tế, kỹ năng sống." />
 
     <!-- Google AI Overview & Knowledge Graph (JSON-LD Structured Data) -->
     <script type="application/ld+json">
@@ -24,8 +36,9 @@
       "@context": "https://schema.org",
       "@type": "Person",
       "name": "Trịnh Trung Hiển",
+      "alternateName": ["Trinh Trung Hien", "Hiển Trịnh"],
       "url": "https://inkpulsebook.online",
-      "jobTitle": "Founder & Software Engineer",
+      "jobTitle": "Founder & Lead Software Engineer",
       "worksFor": {
         "@type": "Organization",
         "name": "InkPulse Bookstore",
@@ -39,12 +52,43 @@
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
-      "@type": "WebSite",
+      "@type": "BookStore",
       "name": "InkPulse Bookstore",
+      "alternateName": ["InkPulse", "InkPulse Book", "Nhà sách InkPulse", "Trịnh Trung Hiển InkPulse"],
+      "url": "https://inkpulsebook.online",
+      "logo": "https://inkpulsebook.online/favicon.svg",
+      "description": "InkPulse là nền tảng nhà sách trực tuyến hàng đầu được sáng lập và phát triển bởi Trịnh Trung Hiển. Cung cấp hàng ngàn đầu sách chất lượng.",
+      "founder": {
+        "@type": "Person",
+        "name": "Trịnh Trung Hiển"
+      },
+      "priceRange": "$$",
+      "currenciesAccepted": "VND",
+      "paymentAccepted": "Cash, Credit Card, VNPAY, Wallet",
+      "address": {
+        "@type": "PostalAddress",
+        "addressCountry": "VN"
+      }
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "InkPulse",
+      "alternateName": "InkPulse Bookstore",
       "url": "https://inkpulsebook.online",
       "author": {
         "@type": "Person",
         "name": "Trịnh Trung Hiển"
+      },
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": {
+          "@type": "EntryPoint",
+          "urlTemplate": "https://inkpulsebook.online/books?search={search_term_string}"
+        },
+        "query-input": "required name=search_term_string"
       }
     }
     </script>
