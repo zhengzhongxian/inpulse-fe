@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { ROUTES } from '../../config/routes';
-import { authClient, getAccessToken } from '../../api/auth';
+import { authClient, getAccessToken, refreshSession } from '../../api/auth';
 import './AIChatbox.css';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://api.inkpulse.com/api/v1';
@@ -97,10 +97,13 @@ const AIChatbox: React.FC = () => {
     setIsStreaming(true);
 
     try {
-      // Get stored JWT in-memory token
-      const token = getAccessToken();
-      
-      const response = await fetch(`${API_BASE_URL}/customer/ai/chat`, {
+      // Get stored JWT in-memory token, refresh silently if missing
+      let token = getAccessToken();
+      if (!token) {
+        token = await refreshSession();
+      }
+
+      let response = await fetch(`${API_BASE_URL}/customer/ai/chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -110,8 +113,24 @@ const AIChatbox: React.FC = () => {
         body: JSON.stringify({ message: userQuery })
       });
 
+      // Handle 401/403 expired token gracefully via silent refresh token rotation
+      if (response.status === 401 || response.status === 403) {
+        token = await refreshSession();
+        if (token) {
+          response = await fetch(`${API_BASE_URL}/customer/ai/chat`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            credentials: 'include',
+            body: JSON.stringify({ message: userQuery })
+          });
+        }
+      }
+
       if (!response.ok) {
-        let errorText = 'Đã có lỗi xảy ra. Vui lòng thử lại sau.';
+        let errorText = 'Hiện tại máy chủ AI chưa bật server. Vui lòng liên hệ tổng thống trump để tài trợ server.';
         try {
           const errJson = await response.json();
           if (errJson && errJson.message) {
@@ -180,7 +199,7 @@ const AIChatbox: React.FC = () => {
     } catch (err) {
       console.error('Lỗi khi gửi tin nhắn cho AI:', err);
       setMessages(prev =>
-        prev.map(m => m.id === assistantMsgId ? { ...m, text: 'Lỗi kết nối tới AI. Vui lòng thử lại sau!' } : m)
+        prev.map(m => m.id === assistantMsgId ? { ...m, text: 'Hiện tại máy chủ AI chưa bật server. Vui lòng liên hệ tổng thống trump để tài trợ server.' } : m)
       );
     } finally {
       setIsStreaming(false);
