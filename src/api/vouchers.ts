@@ -23,7 +23,7 @@ export interface PublicVoucherResponse {
   usedCount: number;
   maxUsesPerUser: number;
   coinCost: number;
-  targetType: 'ALL' | 'CATEGORY' | 'BOOK' | 'EDITION';
+  targetType: 'ALL' | 'CATEGORY' | 'BOOK' | 'EDITION' | 'SHIPPING';
 }
 
 export interface VoucherTargetItemResponse {
@@ -45,7 +45,7 @@ export interface VoucherDetailResponse {
   maxUsesPerUser: number;
   isActive: boolean;
   coinCost: number;
-  targetType: 'ALL' | 'CATEGORY' | 'BOOK' | 'EDITION';
+  targetType: 'ALL' | 'CATEGORY' | 'BOOK' | 'EDITION' | 'SHIPPING';
   createdAt: string;
   targetItems: VoucherTargetItemResponse[];
 }

@@ -53,9 +53,6 @@ function Profile() {
   const [ordersPage, setOrdersPage] = useState<number>(1);
   const [ordersTotalPages, setOrdersTotalPages] = useState<number>(1);
   const [isLoadingOrders, setIsLoadingOrders] = useState<boolean>(false);
-  const [selectedOrderDetail, setSelectedOrderDetail] = useState<any | null>(null);
-  const [showOrderDetailModal, setShowOrderDetailModal] = useState<boolean>(false);
-  const [isLoadingOrderDetail, setIsLoadingOrderDetail] = useState<boolean>(false);
 
   // Avatar upload file reference
   const [avatarFile, setAvatarFile] = useState<File | null>(null);

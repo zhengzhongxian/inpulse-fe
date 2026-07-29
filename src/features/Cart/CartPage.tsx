@@ -7,8 +7,8 @@ import { getMyCartApi, updateCartItemApi, removeCartItemApi } from '../../api/ca
 import type { CartItemResponse } from '../../api/cart';
 import { ROUTES } from '../../config/routes';
 import { getProvincesApi, getDistrictsApi, getWardsApi } from '../../api/address';
-import { calculateShippingFeeApi, createOrderApi, getOrderDetailApi, mockPaymentApi } from '../../api/order';
-import { getMyVouchersApi, checkVoucherEligibilityApi } from '../../api/vouchers';
+import { calculateShippingFeeApi, createOrderApi, getOrderDetailApi } from '../../api/order';
+import { checkVoucherEligibilityApi } from '../../api/vouchers';
 import type { CheckoutEligibleVoucherResponse } from '../../api/vouchers';
 import '../../pages/Vouchers.css';
 import './CartPage.css';

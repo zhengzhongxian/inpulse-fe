@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { ROUTES } from '../../config/routes';
-import { authClient, getAccessToken, refreshSession } from '../../api/auth';
+import { getAccessToken, refreshSession } from '../../api/auth';
 import './AIChatbox.css';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
